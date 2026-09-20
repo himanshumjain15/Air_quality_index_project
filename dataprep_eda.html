@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataPrep_EDA | Air Quality, Weather and Respiratory Health</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site">
+<h1>Air Quality, Weather and Respiratory Health</h1>
+<p>A data science project on how weather shapes the air people breathe, and how that air relates to lung health in US cities.</p>
+</header>
+<nav><ul><li><a href="index.html">Introduction</a></li><li><a href="dataprep_eda.html" class="active">DataPrep_EDA</a></li><li><a href="clustering.html">Clustering</a></li><li><a href="pca.html">PCA</a></li><li><a href="naivebayes.html">NaiveBayes</a></li><li><a href="dectrees.html">DecTrees</a></li><li><a href="svms.html">SVMs</a></li><li><a href="regression.html">Regression</a></li><li><a href="nn.html">NN</a></li><li><a href="conclusions.html">Conclusions</a></li><li><a href="about.html">About Me</a></li></ul></nav>
+<main>
+
+<section>
+<h2>DataPrep / EDA</h2>
+<p>This tab documents how, where and why the data were gathered, how they were cleaned, and what exploratory visualization reveals. The goal is to combine <b>air quality</b> and <b>weather</b> measurements for large US cities with <b>county-level respiratory health</b> statistics, so that the questions on the Introduction tab can be examined from several angles. The data cover 55 cities across the United States for the 365 days of 2023, plus health measures for nearly 3,000 counties.</p>
+<p><b>Code:</b> data gathering <a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/01_gather_data.py"><code>01_gather_data.py</code></a>, cleaning and EDA <a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/02_clean_eda.py"><code>02_clean_eda.py</code></a> (Python 3.10; packages <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code>, <code>seaborn</code>). The whole repository is at <a href="https://github.com/himanshumjain15/Air_quality_index_project">github.com/himanshumjain15/Air_quality_index_project</a>.</p>
+</section>
+
+<section>
+<h2>1. Where and how the data were gathered</h2>
+<table>
+<tr><th>Source</th><th>Content</th><th>How obtained</th><th>Raw data</th></tr>
+<tr><td><b>Open-Meteo Air Quality API</b><br><a href="https://open-meteo.com/en/docs/air-quality-api">open-meteo.com</a></td>
+<td>Hourly PM10, PM2.5, carbon monoxide, nitrogen dioxide, sulphur dioxide, ozone and US AQI for each city in 2023 (481,800 rows)</td>
+<td>Python <code>requests</code>, one GET call per city (no key needed)</td>
+<td><a href="data/raw/openmeteo_air_quality_hourly_raw.csv">openmeteo_air_quality_hourly_raw.csv</a></td></tr>
+<tr><td><b>Open-Meteo Historical Weather API</b><br><a href="https://open-meteo.com/en/docs/historical-weather-api">open-meteo.com</a></td>
+<td>Daily mean, maximum and minimum temperature, precipitation, maximum wind speed and solar radiation (20,075 rows)</td>
+<td>Python <code>requests</code>, one GET call per city</td>
+<td><a href="data/raw/openmeteo_weather_daily_raw.csv">openmeteo_weather_daily_raw.csv</a></td></tr>
+<tr><td><b>CDC PLACES (county data, 2023 release)</b><br><a href="https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-County-Data-20/swc5-untb">data.cdc.gov</a></td>
+<td>Model-based crude and age-adjusted prevalence of asthma, COPD, smoking, obesity, diabetes, uninsured adults, high blood pressure, heart disease, depression and physical inactivity for US counties (59,160 rows)</td>
+<td>Socrata Open Data API, one request filtered to ten measures</td>
+<td><a href="data/raw/cdc_places_county_raw.csv">cdc_places_county_raw.csv</a></td></tr>
+<tr><td><b>City reference table</b> (created)</td>
+<td>55 cities with state, matching county name, latitude and longitude, chosen to cover all regions and a wide range of climates</td>
+<td>Built by hand in the code</td>
+<td><a href="data/raw/cities_reference.csv">cities_reference.csv</a></td></tr>
+</table>
+
+<h3>API endpoints and example GET requests</h3>
+<p><b>Air quality:</b> <code>https://air-quality-api.open-meteo.com/v1/air-quality</code></p>
+<pre>GET https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.01&amp;longitude=-105.27&amp;start_date=2023-01-01&amp;end_date=2023-12-31&amp;hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&amp;timezone=auto</pre>
+<p><b>Weather:</b> <code>https://archive-api.open-meteo.com/v1/archive</code></p>
+<pre>GET https://archive-api.open-meteo.com/v1/archive?latitude=40.01&amp;longitude=-105.27&amp;start_date=2023-01-01&amp;end_date=2023-12-31&amp;daily=temperature_2m_mean,precipitation_sum,wind_speed_10m_max&amp;timezone=auto</pre>
+<p><b>CDC PLACES:</b> <code>https://data.cdc.gov/resource/swc5-untb.json</code></p>
+<pre>GET https://data.cdc.gov/resource/swc5-untb.json?$where=measureid in ('CASTHMA','COPD')&amp;$limit=100000</pre>
+
+<h3>Why these data</h3>
+<p>Weather and air quality change every day, so hourly and daily values give thousands of observations for the questions about ozone, rain, wind and smoke. Health outcomes change slowly and are reported per county, so they add a second, unlabeled-to-labeled layer: asthma and COPD prevalence can become categories (High or Low) or numbers, which suits classification, clustering and regression later in the project. The data mix <b>quantitative</b> variables (concentrations, temperatures) with <b>qualitative</b> ones (AQI category, region, season, asthma level) and include both labeled and unlabeled variables.</p>
+<div class="note"><b>Limitation.</b> Open-Meteo's air quality values are estimates from an atmospheric (CAMS) model on a coarse grid, not readings from a monitor in the city center. They capture regional patterns and large events well, but can differ from station data, especially in coastal and mountain areas. The health values are also model-based estimates for whole counties.</div>
+</section>
+
+<section>
+<h2>2. Raw data and cleaned data</h2>
+<p>Small previews of the first rows are shown below (the full files are linked above and in the repository).</p>
+<h3>Raw</h3>
+<figure><img src="images/raw_air_quality.png" alt="Raw air quality"><figcaption>Raw hourly air quality as returned by the API, one row per city and hour.</figcaption></figure>
+<figure><img src="images/raw_weather.png" alt="Raw weather"><figcaption>Raw daily weather with API column names.</figcaption></figure>
+<figure><img src="images/raw_cdc_places.png" alt="Raw CDC PLACES"><figcaption>Raw CDC PLACES table in long format: one row per county, measure and prevalence type.</figcaption></figure>
+<h3>Cleaned</h3>
+<figure><img src="images/clean_daily.png" alt="Clean daily"><figcaption>Cleaned daily table (<a href="data/clean/daily_city_air_weather_clean.csv">download</a>): hourly values aggregated to one row per city and day and joined to weather.</figcaption></figure>
+<figure><img src="images/clean_health.png" alt="Clean health"><figcaption>Cleaned county health table (<a href="data/clean/county_health_clean.csv">download</a>): one row per county, one column per measure.</figcaption></figure>
+<figure><img src="images/clean_city.png" alt="Clean city"><figcaption>City-level table (<a href="data/clean/city_air_weather_health_clean.csv">download</a>) that joins yearly air, weather and health features for 50 cities.</figcaption></figure>
+</section>
+
+<section>
+<h2>3. Cleaning steps</h2>
+<ol>
+<li><b>Checks on the API data.</b> Timestamps were parsed and every column was checked for duplicates, negative concentrations and missing values. None were found in the raw API data (0 duplicates, 0 negative values, 0 missing values), so no imputation was needed. The code still contains the safeguards (clipping at zero and short-gap interpolation) so that a future download would be handled.</li>
+<li><b>Hourly to daily.</b> Hourly air quality was aggregated to one row per city and day: mean PM2.5, PM10, CO, NO2 and SO2, maximum ozone and maximum AQI. Days with fewer than 18 valid hours would have been dropped; all 20,075 city-days passed.</li>
+<li><b>Weather join.</b> Daily weather columns were renamed (for example <code>temperature_2m_mean</code> to <code>temp_mean</code>) and merged with air quality on city and date.</li>
+<li><b>Outliers.</b> Only physically impossible values were treated as errors (PM2.5 above 1000, temperature above 60 C, and similar). None were found. Very high PM2.5 days in June 2023 are <b>real</b> smoke events and were deliberately kept.</li>
+<li><b>Health data.</b> Only crude prevalence rows were kept (age-adjusted rows duplicate them), values were converted to numbers, 10 missing values were dropped, and the ten measures were pivoted into columns. Counties missing any of asthma, COPD, smoking or obesity were removed, leaving <b>2,956 counties</b>.</li>
+<li><b>Unmatched cities.</b> The CDC file has no rows for Pennsylvania or Kentucky and does not list independent cities such as Baltimore City and St. Louis City. Philadelphia, Pittsburgh, Louisville, Baltimore and St. Louis therefore have air and weather data but no health match, and were left out of the merged city table (<b>50 cities</b> remain). Their daily data are still used in the daily table.</li>
+<li><b>New variables.</b> AQI category (EPA bins), season, Census region, a rainy-day flag (at least 1 mm), the share of days with AQI above 100, a High/Low asthma level (median split) and a Low/Medium/High PM2.5 level (tertiles) were added by discretization.</li>
+<li><b>No missing values remain</b> in the cleaned files (checked in the code). Normalization and sampling are left for each modeling tab, because each method needs different preparation.</li>
+</ol>
+</section>
+
+<section>
+<h2>4. Exploratory visualizations</h2>
+<figure class="small"><a href="images/eda_01_missing_raw.png"><img src="images/eda_01_missing_raw.png" alt="Missing values in the raw API data"></a><figcaption><b>Missing values in the raw API data.</b> Every column pulled from the two Open-Meteo APIs is complete, with 0% missing across 481,800 hourly air quality rows and 20,075 daily weather rows. Missing values appeared instead in the CDC health table (10 values) and as five cities with no matching county record.</figcaption></figure>
+<figure class="small"><a href="images/eda_02_pm25_distribution.png"><img src="images/eda_02_pm25_distribution.png" alt="Distribution of daily PM2.5"></a><figcaption><b>Distribution of daily PM2.5.</b> The typical city-day has a PM2.5 of 9.3 micrograms per cubic meter, but the distribution has a long right tail that reaches 79. About 17% of all city-days exceed the WHO 24-hour guideline of 15.</figcaption></figure>
+<figure><a href="images/eda_03_monthly_pm25.png"><img src="images/eda_03_monthly_pm25.png" alt="Monthly PM2.5 variation"></a><figcaption><b>Monthly PM2.5 variation.</b> Median PM2.5 is highest in July (12.0) and lowest in October (7.2). June has the highest average (14.3) even though its median is 11.5, which reflects the short, extreme smoke episodes of that month.</figcaption></figure>
+<figure><a href="images/eda_04_city_ranking.png"><img src="images/eda_04_city_ranking.png" alt="Cleanest and most polluted cities by PM2.5"></a><figcaption><b>Cleanest and most polluted cities by PM2.5.</b> Los Angeles (19.2), New York (16.4) and San Diego (15.2) have the highest yearly averages, while Tucson (5.0), Anchorage (5.9) and Colorado Springs (6.4) have the lowest. The values come from an atmospheric model on a coarse grid, so coastal cities may look more polluted than monitor readings would show.</figcaption></figure>
+<figure class="small"><a href="images/eda_05_aqi_categories.png"><img src="images/eda_05_aqi_categories.png" alt="US AQI category counts"></a><figcaption><b>US AQI category counts.</b> Moderate days are the most common (12,251 city-days, 61%), followed by Good (5,967, 30%) and Unhealthy for Sensitive Groups (1,493, 7%). Unhealthy (293) and Very Unhealthy (71) days are rare, and no Hazardous days occurred; the log scale is used so the small bars remain visible.</figcaption></figure>
+<figure><a href="images/eda_06_correlation_heatmap.png"><img src="images/eda_06_correlation_heatmap.png" alt="Correlation between pollutants and weather"></a><figcaption><b>Correlation between pollutants and weather.</b> PM2.5 and PM10 are almost the same signal (r = 0.95), and PM2.5 also tracks carbon monoxide (0.62). Ozone follows solar radiation (0.68), while wind speed is negatively related to PM2.5 (-0.22).</figcaption></figure>
+<figure class="small"><a href="images/eda_07_temp_ozone.png"><img src="images/eda_07_temp_ozone.png" alt="Temperature versus ozone"></a><figcaption><b>Temperature versus ozone.</b> Each hexagon counts city-days, and the cloud slopes upward with a correlation of 0.54 between mean temperature and maximum ozone. Warm days create the conditions for ozone formation, though sunlight and precursor emissions also play a role.</figcaption></figure>
+<figure><a href="images/eda_08_wildfire_episode.png"><img src="images/eda_08_wildfire_episode.png" alt="Canadian wildfire smoke episode, 2023"></a><figcaption><b>Canadian wildfire smoke episode, 2023.</b> New York's daily PM2.5 reached 64.3 on June 7, more than four times the WHO 24-hour guideline of 15, and Boston rose the same days. Chicago peaked at about 57 in late June, while Denver and Phoenix stayed near their usual levels.</figcaption></figure>
+<figure class="small"><a href="images/eda_09_rain_vs_dry.png"><img src="images/eda_09_rain_vs_dry.png" alt="PM2.5 on dry versus rainy days"></a><figcaption><b>PM2.5 on dry versus rainy days.</b> Dry days have a median PM2.5 of 9.37 and rainy days (at least 1 mm) 9.07, a difference of only about 3%. Rain alone at the daily scale therefore has a small effect on fine particles.</figcaption></figure>
+<figure class="small"><a href="images/eda_10_asthma_distribution.png"><img src="images/eda_10_asthma_distribution.png" alt="Asthma prevalence across US counties"></a><figcaption><b>Asthma prevalence across US counties.</b> Across 2,956 counties the median share of adults with current asthma is 10.6%, with a range from 7.8% to 15.3%. The spread is narrow (standard deviation 0.9 points), so small differences between places may be hard to detect.</figcaption></figure>
+<figure><a href="images/eda_11_pm25_vs_asthma.png"><img src="images/eda_11_pm25_vs_asthma.png" alt="City PM2.5 versus asthma prevalence"></a><figcaption><b>City PM2.5 versus asthma prevalence.</b> Across 50 cities, the correlation between yearly PM2.5 and county asthma prevalence is slightly negative (r = -0.12), so no simple positive link appears at this coarse level. Detroit has the highest asthma rate (12.3%) and San Jose the lowest (7.9%), which shows that factors other than one year of PM2.5 matter.</figcaption></figure>
+<figure class="small"><a href="images/eda_12_smoking_vs_copd.png"><img src="images/eda_12_smoking_vs_copd.png" alt="Smoking versus COPD across counties"></a><figcaption><b>Smoking versus COPD across counties.</b> The two rates rise together strongly (r = 0.85 across 2,956 counties), with smoking ranging from 6.4% to 39.8% of adults. This is the clearest relationship in the health data.</figcaption></figure>
+<figure><a href="images/eda_13_pm25_map.png"><img src="images/eda_13_pm25_map.png" alt="Mean PM2.5 by city location"></a><figcaption><b>Mean PM2.5 by city location.</b> The highest averages sit along coastal California and the Northeast corridor, and the lowest appear in the interior Southwest and Mountain West. Each dot is one of the study cities in the contiguous United States.</figcaption></figure>
+<figure><a href="images/eda_14_regions.png"><img src="images/eda_14_regions.png" alt="Regional averages of PM2.5, asthma and COPD"></a><figcaption><b>Regional averages of PM2.5, asthma and COPD.</b> The Northeast has the highest PM2.5 (13.9) but the lowest COPD (4.8%), while the Midwest has the highest asthma (10.9%) and COPD (6.7%). Pollution alone does not explain the regional pattern of lung disease.</figcaption></figure>
+<figure class="small"><a href="images/eda_15_season_region.png"><img src="images/eda_15_season_region.png" alt="PM2.5 by season and region"></a><figcaption><b>PM2.5 by season and region.</b> Summer has the highest average PM2.5 (13.0) and fall the lowest (8.5), with winter at 10.0 and spring at 11.1. The bars are split by region to show that the seasonal peak is not the same everywhere.</figcaption></figure>
+</section>
+
+</main>
+<footer>CSCI 5612 course project &middot; <a href="https://github.com/himanshumjain15/Air_quality_index_project">Source code and data on GitHub</a></footer>
+</body>
+</html>

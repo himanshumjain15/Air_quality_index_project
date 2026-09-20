@@ -1,0 +1,23 @@
+Raw shapes  air quality (481800, 10), weather (20075, 9), CDC PLACES (59160, 23)
+Missing (raw): none
+Air quality: removed 0 duplicate city-hour rows
+Air quality: 0 negative concentration values set to 0
+Air quality: 0 missing hourly values; short gaps (<=6 h) linearly interpolated, 0 remain
+Weather: 0 missing values
+Clean daily city table: (20075, 21), cities 55, NAs 0
+CDC PLACES: 10 crude prevalence values are missing and dropped
+Clean county health table: (2956, 17), NAs in key columns 0
+City table: 55 cities; no CDC county record for ['Baltimore', 'Louisville', 'Philadelphia', 'Pittsburgh', 'St. Louis'] (PA/KY absent and independent cities not in PLACES) -> dropped from the merged city table
+Clean merged city table: (50, 32), NAs 0
+SUMMARY daily_rows: 20075
+SUMMARY cities_daily: 55
+SUMMARY cities_merged: 50
+SUMMARY counties: 2956
+SUMMARY median_pm25: 9.283333333333333
+SUMMARY share_days_above_who: 0.17190535491905354
+SUMMARY r_pm25_asthma_city: -0.11586080288233641
+SUMMARY r_smoking_copd_county: 0.8451935906133651
+SUMMARY top5_pm25: [['Washington', 13.3], ['Chicago', 13.5], ['San Diego', 15.2], ['New York', 16.4], ['Los Angeles', 19.2]]
+SUMMARY bottom5_pm25: [['Tucson', 5.0], ['Anchorage', 5.9], ['Colorado Springs', 6.4], ['Boise', 7.2], ['Albuquerque', 7.4]]
+SUMMARY asthma_median: 10.6
+SUMMARY rain_dry_median: {'Dry': 9.37, 'Rain (>=1 mm)': 9.08}
