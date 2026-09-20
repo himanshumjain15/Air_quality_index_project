@@ -379,8 +379,8 @@ about = """
 <h1>About Me</h1>
 <p class="sub">The person behind the project</p>
 <p class="lead"><b>Himanshu Jain</b></p>
-<p>Master's student in Data Science at the University of Colorado Boulder (Class of 2027), with data science internships at Summer Atlantic Capital, Ernst &amp; Young, and LG Electronics. Skilled in Python, SQL, and Tableau/Power BI for large-scale analysis, statistical modeling, and KPI tracking.</p>
-<p>Experienced in translating complex analyses into clear business recommendations through dashboards, reports, and presentations. Equally comfortable designing data pipelines, validating findings with rigorous experiments, and shipping models to production as containerized services on AWS.</p>
+<p>I am a Master's student in Data Science at the University of Colorado Boulder (Class of 2027), with data science internships at Summer Atlantic Capital, Ernst &amp; Young, and LG Electronics. I am skilled in Python, SQL, and Tableau/Power BI for large-scale analysis, statistical modeling, and KPI tracking.</p>
+<p>I have experience translating complex analyses into clear business recommendations through dashboards, reports, and presentations. I am equally comfortable designing data pipelines, validating findings with rigorous experiments, and shipping models to production as containerized services on AWS.</p>
 <h2>Education</h2>
 <div class="cards">
 <div class="card"><b>University of Colorado Boulder</b><span>Master of Science in Data Science</span>
