@@ -72,8 +72,15 @@ pre code{background:none;padding:0;word-break:normal}
 .start a:hover{border-color:var(--brand)}
 .start a b{display:block;color:var(--brand)}
 .start a span{font-size:.88rem;color:var(--muted)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:.8rem}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}
+.card b{display:block;font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem}
+.card span{display:block;color:var(--muted);font-size:.95rem}
+.card small{display:block;color:var(--muted);margin-top:.7rem;font-size:.85rem}
+.card .tags{margin:.7rem 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.card .tags em{font-style:normal;font-size:.78rem;background:var(--soft);color:var(--brand);border-radius:999px;padding:2px 10px}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;text-align:center;padding:22px}
-@media(max-width:760px){.stats,.start{grid-template-columns:1fr 1fr}nav.top .in{flex-wrap:wrap;padding:6px 14px}nav.top .dd{position:static;box-shadow:none}h1{font-size:1.7rem}main{padding-top:28px}}
+@media(max-width:760px){.stats,.start{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr}nav.top .in{flex-wrap:wrap;padding:6px 14px}nav.top .dd{position:static;box-shadow:none}h1{font-size:1.7rem}main{padding-top:28px}}
 """
 
 THEME_JS = "(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();"
@@ -371,7 +378,17 @@ concl = """
 about = """
 <h1>About Me</h1>
 <p class="sub">The person behind the project</p>
-<p>Himanshu Jain. Student in CSCI 5612 (Data Science). More about the author will be added here.</p>
+<p class="lead"><b>Himanshu Jain</b></p>
+<p>Master's student in Data Science at the University of Colorado Boulder (Class of 2027), with data science internships at Summer Atlantic Capital, Ernst &amp; Young, and LG Electronics. Skilled in Python, SQL, and Tableau/Power BI for large-scale analysis, statistical modeling, and KPI tracking.</p>
+<p>Experienced in translating complex analyses into clear business recommendations through dashboards, reports, and presentations. Equally comfortable designing data pipelines, validating findings with rigorous experiments, and shipping models to production as containerized services on AWS.</p>
+<h2>Education</h2>
+<div class="cards">
+<div class="card"><b>University of Colorado Boulder</b><span>Master of Science in Data Science</span>
+<small>Aug 2025 &ndash; May 2027 &middot; Boulder, CO</small>
+<p class="tags"><em>Statistical Inference</em><em>Data Mining</em><em>Big Data Architecture</em></p></div>
+<div class="card"><b>Manipal Institute of Technology</b><span>Bachelor of Science in Electronics and Communication</span>
+<small>Aug 2021 &ndash; May 2025 &middot; India</small></div>
+</div>
 """
 
 home = f"""
