@@ -8,79 +8,130 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 GH = "https://github.com/himanshumjain15/Air_quality_index_project"
 
-TABS = [  # (file, label)
-    ("index.html", "Introduction"),
+NAV = [
+    ("index.html", "Home"),
+    ("introduction.html", "Introduction"),
     ("dataprep_eda.html", "DataPrep_EDA"),
-    ("clustering.html", "Clustering"),
-    ("pca.html", "PCA"),
-    ("naivebayes.html", "NaiveBayes"),
-    ("dectrees.html", "DecTrees"),
-    ("svms.html", "SVMs"),
-    ("regression.html", "Regression"),
-    ("nn.html", "NN"),
+    ("Unsupervised", [("clustering.html", "Clustering"), ("pca.html", "PCA")]),
+    ("Supervised", [("naivebayes.html", "NaiveBayes"), ("dectrees.html", "DecTrees"),
+                    ("svms.html", "SVMs"), ("regression.html", "Regression"), ("nn.html", "NN")]),
     ("conclusions.html", "Conclusions"),
     ("about.html", "About Me"),
 ]
 
 CSS = """
-:root{--bg:#f7f9fc;--card:#fff;--ink:#1f2937;--muted:#6b7280;--brand:#2a6fdb;--brand-d:#1d4fa0;--line:#e5e7eb;--accent:#f28e2b}
+:root{--bg:#fafaf8;--ink:#1c1c28;--muted:#6b6b78;--brand:#4b4fa3;--soft:#ececf6;--line:#e3e3e8;--card:#fff;--code:#f0f0f4;--warn:#fff6e8;--warnline:#e09a3c}
+:root[data-theme=dark]{--bg:#16161d;--ink:#e8e8ee;--muted:#a0a0ae;--brand:#9da1f2;--soft:#25253a;--line:#2d2d3a;--card:#1e1e28;--code:#252533;--warn:#2b2418;--warnline:#c48a3a}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
-header.site{background:linear-gradient(120deg,#12325f,#2a6fdb);color:#fff;padding:28px 20px 20px}
-header.site h1{margin:0 auto;max-width:1040px;font-size:1.7rem;letter-spacing:.2px}
-header.site p{margin:.25rem auto 0;max-width:1040px;opacity:.9;font-size:.98rem}
-nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-nav ul{list-style:none;margin:0 auto;padding:0 10px;max-width:1040px;display:flex;flex-wrap:wrap}
-nav a{display:block;padding:12px 13px;color:var(--ink);text-decoration:none;font-size:.93rem;border-bottom:3px solid transparent}
-nav a:hover{color:var(--brand)}
-nav a.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
-main{max-width:1040px;margin:26px auto 60px;padding:0 20px}
-section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 26px;margin-bottom:22px}
-h2{margin-top:0;font-size:1.4rem;color:#12325f}
-h3{font-size:1.1rem;margin:1.4rem 0 .4rem;color:#1d4fa0}
-p{margin:.7rem 0}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;line-height:1.25}
+nav.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.top .in{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:6px;min-height:54px}
+nav.top .brand{font-family:"Source Serif 4",Georgia,serif;font-weight:600;color:var(--ink);text-decoration:none;margin-right:14px;font-size:1.02rem;white-space:nowrap}
+nav.top ul{list-style:none;margin:0;padding:0;display:flex;gap:2px;flex-wrap:wrap;flex:1}
+nav.top li{position:relative}
+nav.top li>a,nav.top li>button{display:block;background:none;border:0;font:inherit;font-size:.9rem;color:var(--muted);padding:7px 10px;border-radius:6px;text-decoration:none;cursor:pointer}
+nav.top li>a:hover,nav.top li>button:hover{color:var(--ink)}
+nav.top li>a.active,nav.top li>button.active{background:var(--soft);color:var(--brand);font-weight:600}
+nav.top .dd{display:none;position:absolute;top:100%;left:0;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+nav.top li:hover .dd,nav.top li:focus-within .dd,nav.top li.open .dd{display:block}
+nav.top .dd a{display:block;padding:7px 10px;border-radius:6px;color:var(--ink);text-decoration:none;font-size:.9rem}
+nav.top .dd a:hover{background:var(--soft)}
+nav.top .dd a.active{color:var(--brand);font-weight:600}
+.tools{display:flex;gap:4px;margin-left:auto}
+.tools a,.tools button{background:none;border:0;color:var(--muted);cursor:pointer;padding:7px;border-radius:6px;display:flex}
+.tools a:hover,.tools button:hover{color:var(--ink);background:var(--soft)}
+main{max-width:860px;margin:0 auto;padding:42px 22px 80px}
+h1{font-size:2.15rem;margin:0 0 .35rem}
+.sub{color:var(--muted);font-size:1.08rem;margin:0 0 1.6rem}
+h2{font-size:1.5rem;margin:2.6rem 0 .6rem;padding-top:.3rem}
+h3{font-size:1.15rem;margin:1.7rem 0 .3rem}
+p{margin:.85rem 0}
 a{color:var(--brand)}
-figure{margin:20px 0;text-align:center}
+.lead{font-size:1.1rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:1.8rem 0}
+.stats b{display:block;font:600 1.9rem "IBM Plex Sans",sans-serif;color:var(--brand);line-height:1.2}
+.stats span{font-size:.85rem;color:var(--muted)}
+ul.cover li,ol li{margin:.3rem 0}
+figure{margin:24px 0;text-align:center}
 figure img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
-figure.small img{max-width:620px}
-figcaption{font-size:.92rem;color:var(--muted);max-width:820px;margin:8px auto 0;text-align:left}
+figure.small img{max-width:640px}
+figcaption{font-size:.92rem;color:var(--muted);margin:9px auto 0;text-align:left}
 figcaption b{color:var(--ink)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-table{border-collapse:collapse;width:100%;font-size:.93rem;margin:.6rem 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem;margin:.8rem 0;display:block;overflow-x:auto}
 th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-th{background:#eef3fd}
-code{background:#eef2f7;padding:1px 5px;border-radius:4px;font-size:.88em;word-break:break-all}
-pre{background:#0f172a;color:#e5e7eb;padding:12px 14px;border-radius:8px;overflow:auto;font-size:.85rem}
-ol.q li{margin:.35rem 0}
-.note{border-left:4px solid var(--accent);background:#fff7ed;padding:10px 14px;border-radius:6px;font-size:.95rem}
-.soon{border-left:4px solid var(--brand);background:#eff5ff;padding:10px 14px;border-radius:6px}
-footer{text-align:center;color:var(--muted);font-size:.85rem;padding:0 0 30px}
-@media(max-width:720px){.grid2{grid-template-columns:1fr}section{padding:18px}nav a{padding:10px 9px;font-size:.88rem}}
+th{background:var(--soft)}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.87em;word-break:break-word}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;font-size:.84rem;line-height:1.5}
+pre code{background:none;padding:0;word-break:normal}
+.note{border-left:4px solid var(--warnline);background:var(--warn);padding:10px 16px;border-radius:6px;font-size:.95rem;margin:1.2rem 0}
+.soon{border-left:4px solid var(--brand);background:var(--soft);padding:10px 16px;border-radius:6px;margin:1rem 0}
+.start{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:1rem}
+.start a{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);background:var(--card)}
+.start a:hover{border-color:var(--brand)}
+.start a b{display:block;color:var(--brand)}
+.start a span{font-size:.88rem;color:var(--muted)}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;text-align:center;padding:22px}
+@media(max-width:760px){.stats,.start{grid-template-columns:1fr 1fr}nav.top .in{flex-wrap:wrap;padding:6px 14px}nav.top .dd{position:static;box-shadow:none}h1{font-size:1.7rem}main{padding-top:28px}}
 """
+
+THEME_JS = "(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();"
+TOGGLE_JS = """
+document.getElementById('theme').addEventListener('click',function(){
+var d=document.documentElement,n=d.getAttribute('data-theme')==='dark'?'light':'dark';
+d.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}});
+document.querySelectorAll('nav.top li.has-dd>button').forEach(function(b){
+b.addEventListener('click',function(){b.parentElement.classList.toggle('open')})});
+"""
+
+GH_ICON = ('<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 '
+           '2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13'
+           '-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-'
+           '3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 '
+           '.27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73'
+           '.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>')
+MOON_ICON = ('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+             'stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>')
 
 
 def page(fname, title, body):
-    active = ' class="active"'
-    nav = "".join(
-        f'<li><a href="{f}"{active if f == fname else ""}>{l}</a></li>' for f, l in TABS)
+    items = []
+    for entry in NAV:
+        if isinstance(entry[1], list):
+            group, links = entry
+            act = any(f == fname for f, _ in links)
+            sub = "".join(f'<a href="{f}"{" class=active" if f == fname else ""}>{l}</a>' for f, l in links)
+            cls = "active" if act else ""
+            items.append(f'<li class="has-dd"><button class="{cls}" aria-haspopup="true">'
+                         f'{group} &#9662;</button><div class="dd">{sub}</div></li>')
+        else:
+            f, l = entry
+            items.append(f'<li><a href="{f}"{" class=active" if f == fname else ""}>{l}</a></li>')
+    nav_items = "".join(items)
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} | Air Quality, Weather and Respiratory Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap" rel="stylesheet">
+<script>{THEME_JS}</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="site">
-<h1>Air Quality, Weather and Respiratory Health</h1>
-<p>A data science project on how weather shapes the air people breathe, and how that air relates to lung health in US cities.</p>
-</header>
-<nav><ul>{nav}</ul></nav>
+<nav class="top"><div class="in">
+<a class="brand" href="index.html">Air Quality &amp; Lung Health</a>
+<ul>{nav_items}</ul>
+<div class="tools"><a href="{GH}" aria-label="GitHub repository">{GH_ICON}</a>
+<button id="theme" aria-label="Toggle dark mode">{MOON_ICON}</button></div>
+</div></nav>
 <main>
 {body}
 </main>
 <footer>CSCI 5612 course project &middot; <a href="{GH}">Source code and data on GitHub</a></footer>
+<script>{TOGGLE_JS}</script>
 </body>
 </html>
 """
@@ -95,8 +146,9 @@ def fig(src, title, caption, small=False):
 
 # ============================================================================ INTRODUCTION
 intro = f"""
+<h1>Introduction</h1>
+<p class="sub">Why air quality, weather and lung health belong together</p>
 <section>
-<h2>Introduction</h2>
 
 <p>Clean air is one of the most basic requirements for human health, yet the World Health Organization estimates that the combined effects of ambient and household air pollution are linked to about 7 million premature deaths every year. Among the many pollutants in the air, fine particulate matter, known as PM2.5, is considered the most dangerous because the particles are less than 2.5 micrometers across, roughly thirty times thinner than a human hair. These particles slip past the natural defenses of the nose and throat, settle deep in the lungs, and can pass into the bloodstream, where they contribute to asthma attacks, heart disease, stroke, lung cancer, and early death. Ground-level ozone, the main ingredient of smog, is a second major concern. It forms when sunlight cooks exhaust from vehicles and industry, and it inflames the airways, making breathing painful and triggering coughing and wheezing. In 2021 the World Health Organization tightened its guidelines and now recommends that PM2.5 stay below 5 micrometers per cubic meter as a yearly average and below 15 micrometers per cubic meter on any single day. Most of the world's population, including millions of people in wealthy countries, lives in places that exceed these limits. To make invisible pollution understandable, the United States Environmental Protection Agency converts pollutant measurements into the Air Quality Index, a color-coded scale that runs from Good to Hazardous. A reading above 100 means that the air is unhealthy for sensitive groups, and a reading above 150 means that everyone may begin to feel effects. Because the index is reported daily in weather apps and news broadcasts, it has become a practical guide for deciding whether to exercise outdoors, open windows, or keep children inside. Understanding what pushes that number up or down is therefore a question that touches nearly every household.</p>
 
@@ -167,14 +219,12 @@ FIGS = [
 fig_html = "\n".join(fig(*f) for f in FIGS)
 
 dataprep = f"""
-<section>
-<h2>DataPrep / EDA</h2>
+<h1>DataPrep_EDA</h1>
+<p class="sub">How the data were gathered, cleaned and explored</p>
 <p>This tab documents how, where and why the data were gathered, how they were cleaned, and what exploratory visualization reveals. The goal is to combine <b>air quality</b> and <b>weather</b> measurements for large US cities with <b>county-level respiratory health</b> statistics, so that the questions on the Introduction tab can be examined from several angles. The data cover 55 cities across the United States for the 365 days of 2023, plus health measures for nearly 3,000 counties.</p>
-<p><b>Code:</b> data gathering <a href="{GH}/blob/main/code/01_gather_data.py"><code>01_gather_data.py</code></a>, cleaning and EDA <a href="{GH}/blob/main/code/02_clean_eda.py"><code>02_clean_eda.py</code></a> (Python 3.10; packages <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code>, <code>seaborn</code>). The whole repository is at <a href="{GH}">{GH.replace("https://","")}</a>.</p>
-</section>
 
 <section>
-<h2>1. Where and how the data were gathered</h2>
+<h2>Data Sources</h2>
 <table>
 <tr><th>Source</th><th>Content</th><th>How obtained</th><th>Raw data</th></tr>
 <tr><td><b>Open-Meteo Air Quality API</b><br><a href="https://open-meteo.com/en/docs/air-quality-api">open-meteo.com</a></td>
@@ -195,7 +245,14 @@ dataprep = f"""
 <td><a href="{RAWLINK}cities_reference.csv">cities_reference.csv</a></td></tr>
 </table>
 
-<h3>API endpoints and example GET requests</h3>
+<h3>Why these data</h3>
+<p>Weather and air quality change every day, so hourly and daily values give thousands of observations for the questions about ozone, rain, wind and smoke. Health outcomes change slowly and are reported per county, so they add a second layer: asthma and COPD prevalence can become categories (High or Low) or numbers, which suits classification, clustering and regression later in the project. The data mix <b>quantitative</b> variables (concentrations, temperatures) with <b>qualitative</b> ones (AQI category, region, season, asthma level) and include both labeled and unlabeled variables.</p>
+<div class="note"><b>Limitation.</b> Open-Meteo's air quality values are estimates from an atmospheric (CAMS) model on a coarse grid, not readings from a monitor in the city center. They capture regional patterns and large events well, but can differ from station data, especially in coastal and mountain areas. The health values are also model-based estimates for whole counties.</div>
+</section>
+
+<section>
+<h2>APIs Used</h2>
+<p>Two of the sources are true APIs queried from Python; the CDC data are pulled from an open data API as well. Each call below is an example of a core endpoint with a GET request.</p>
 <p><b>Air quality:</b> <code>https://air-quality-api.open-meteo.com/v1/air-quality</code></p>
 <pre>GET https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.01&amp;longitude=-105.27&amp;start_date=2023-01-01&amp;end_date=2023-12-31&amp;hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&amp;timezone=auto</pre>
 <p><b>Weather:</b> <code>https://archive-api.open-meteo.com/v1/archive</code></p>
@@ -203,13 +260,33 @@ dataprep = f"""
 <p><b>CDC PLACES:</b> <code>https://data.cdc.gov/resource/swc5-untb.json</code></p>
 <pre>GET https://data.cdc.gov/resource/swc5-untb.json?$where=measureid in ('CASTHMA','COPD')&amp;$limit=100000</pre>
 
-<h3>Why these data</h3>
-<p>Weather and air quality change every day, so hourly and daily values give thousands of observations for the questions about ozone, rain, wind and smoke. Health outcomes change slowly and are reported per county, so they add a second, unlabeled-to-labeled layer: asthma and COPD prevalence can become categories (High or Low) or numbers, which suits classification, clustering and regression later in the project. The data mix <b>quantitative</b> variables (concentrations, temperatures) with <b>qualitative</b> ones (AQI category, region, season, asthma level) and include both labeled and unlabeled variables.</p>
-<div class="note"><b>Limitation.</b> Open-Meteo's air quality values are estimates from an atmospheric (CAMS) model on a coarse grid, not readings from a monitor in the city center. They capture regional patterns and large events well, but can differ from station data, especially in coastal and mountain areas. The health values are also model-based estimates for whole counties.</div>
 </section>
 
 <section>
-<h2>2. Raw data and cleaned data</h2>
+<h2>Raw Data Access</h2>
+<ul>
+<li><a href="{RAWLINK}openmeteo_air_quality_hourly_raw.csv">Open-Meteo hourly air quality (raw CSV)</a></li>
+<li><a href="{RAWLINK}openmeteo_weather_daily_raw.csv">Open-Meteo daily weather (raw CSV)</a></li>
+<li><a href="{RAWLINK}cdc_places_county_raw.csv">CDC PLACES county health (raw CSV)</a></li>
+<li><a href="{RAWLINK}cities_reference.csv">City reference table (CSV)</a></li>
+<li>Cleaned files: <a href="{CLEANLINK}daily_city_air_weather_clean.csv">daily</a>, <a href="{CLEANLINK}county_health_clean.csv">county health</a>, <a href="{CLEANLINK}city_air_weather_health_clean.csv">city level</a>, and the <a href="{CLEANLINK}cleaning_log.txt">cleaning log</a></li>
+</ul>
+</section>
+
+<section>
+<h2>Code</h2>
+<p>All code is written in Python 3.10 with the packages <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code> and <code>seaborn</code>.</p>
+<ul>
+<li><a href="{GH}/blob/main/code/01_gather_data.py"><code>01_gather_data.py</code></a> gathers the raw data from the APIs.</li>
+<li><a href="{GH}/blob/main/code/02_clean_eda.py"><code>02_clean_eda.py</code></a> cleans the data and creates the figures.</li>
+<li><a href="{GH}/blob/main/code/03_intro_image.py"><code>03_intro_image.py</code></a> creates the Introduction image.</li>
+<li><a href="{GH}/blob/main/code/build_site.py"><code>build_site.py</code></a> generates the website pages.</li>
+</ul>
+<p>The whole repository is at <a href="{GH}">{GH.replace("https://","")}</a>.</p>
+</section>
+
+<section>
+<h2>Raw and Cleaned Data</h2>
 <p>Small previews of the first rows are shown below (the full files are linked above and in the repository).</p>
 <h3>Raw</h3>
 <figure><img src="images/raw_air_quality.png" alt="Raw air quality"><figcaption>Raw hourly air quality as returned by the API, one row per city and hour.</figcaption></figure>
@@ -222,7 +299,7 @@ dataprep = f"""
 </section>
 
 <section>
-<h2>3. Cleaning steps</h2>
+<h2>Cleaning Pipeline</h2>
 <ol>
 <li><b>Checks on the API data.</b> Timestamps were parsed and every column was checked for duplicates, negative concentrations and missing values. None were found in the raw API data (0 duplicates, 0 negative values, 0 missing values), so no imputation was needed. The code still contains the safeguards (clipping at zero and short-gap interpolation) so that a future download would be handled.</li>
 <li><b>Hourly to daily.</b> Hourly air quality was aggregated to one row per city and day: mean PM2.5, PM10, CO, NO2 and SO2, maximum ozone and maximum AQI. Days with fewer than 18 valid hours would have been dropped; all 20,075 city-days passed.</li>
@@ -236,7 +313,7 @@ dataprep = f"""
 </section>
 
 <section>
-<h2>4. Exploratory visualizations</h2>
+<h2>Exploratory Data Visualizations</h2>
 {fig_html}
 </section>
 """
@@ -268,8 +345,9 @@ MODELS = [
 
 for f, label, module, plan, data in MODELS:
     body = f"""
+<h1>{label}</h1>
+<p class="sub">Analysis tab, to be completed in {module}</p>
 <section>
-<h2>{label}</h2>
 <div class="soon"><b>Coming in {module}.</b> This tab will be completed as the course progresses.</div>
 <h3>Overview</h3>
 <p>{plan}</p>
@@ -284,20 +362,49 @@ for f, label, module, plan, data in MODELS:
     page(f, label, body)
 
 concl = """
+<h1>Conclusions</h1>
+<p class="sub">What the findings mean for everyday life</p>
 <section>
-<h2>Conclusions</h2>
 <div class="soon"><b>Coming in the final project part.</b> This tab will hold at least five non-technical paragraphs with images that summarize what the project found about weather, air quality and lung health.</div>
 </section>
 """
 about = """
-<section>
-<h2>About Me</h2>
+<h1>About Me</h1>
+<p class="sub">The person behind the project</p>
 <p>Himanshu Jain. Student in CSCI 5612 (Data Science). More about the author will be added here.</p>
-</section>
+"""
+
+home = f"""
+<h1>How Weather Shapes the Air We Breathe, and What It Means for Lung Health</h1>
+<p class="sub">Air quality, weather and respiratory health across 55 US cities, 2023</p>
+<p class="lead">On June 7, 2023, smoke from Canadian wildfires pushed New York City's daily fine-particle level to more than four times the World Health Organization guideline, while Denver and Phoenix barely changed. That contrast frames this project: how much of the air people breathe is set by weather, season and distant events, and how does that air relate to asthma and COPD? The project draws on three data sources covering hourly air quality and daily weather for 55 cities in 2023 and county-level health statistics for 2,956 US counties.</p>
+<div class="stats">
+<div><b>55</b><span>US cities analyzed</span></div>
+<div><b>481,800</b><span>hourly air quality readings</span></div>
+<div><b>2,956</b><span>counties with health data</span></div>
+<div><b>3</b><span>data sources</span></div>
+</div>
+{fig("eda_08_wildfire_episode.png", "One smoke event, five cities",
+     "Daily PM2.5 during the Canadian wildfire smoke episode of 2023. New York and Boston spiked in early June and Chicago in late June, while Denver and Phoenix stayed near normal.")}
+<h2>What this project covers</h2>
+<ul class="cover">
+<li>Data preparation and exploratory analysis: <b>complete</b></li>
+<li>Clustering and PCA: to come</li>
+<li>Naive Bayes and decision trees: to come</li>
+<li>Support vector machines: to come</li>
+<li>Regression and neural networks: to come</li>
+</ul>
+<h2>Where to start</h2>
+<div class="start">
+<a href="introduction.html"><b>Introduction</b><span>Why air, weather and lung health belong together, plus ten guiding questions</span></a>
+<a href="dataprep_eda.html"><b>DataPrep_EDA</b><span>Data sources, APIs, cleaning steps and 15 visualizations</span></a>
+<a href="conclusions.html"><b>Conclusions</b><span>What it all means (coming at the end of the course)</span></a>
+</div>
 """
 
 (ROOT / "style.css").write_text(CSS, encoding="utf-8")
-page("index.html", "Introduction", intro)
+page("index.html", "Home", home)
+page("introduction.html", "Introduction", intro)
 page("dataprep_eda.html", "DataPrep_EDA", dataprep)
 page("conclusions.html", "Conclusions", concl)
 page("about.html", "About Me", about)

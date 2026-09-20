@@ -4,24 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DataPrep_EDA | Air Quality, Weather and Respiratory Health</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@500;600&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="site">
-<h1>Air Quality, Weather and Respiratory Health</h1>
-<p>A data science project on how weather shapes the air people breathe, and how that air relates to lung health in US cities.</p>
-</header>
-<nav><ul><li><a href="index.html">Introduction</a></li><li><a href="dataprep_eda.html" class="active">DataPrep_EDA</a></li><li><a href="clustering.html">Clustering</a></li><li><a href="pca.html">PCA</a></li><li><a href="naivebayes.html">NaiveBayes</a></li><li><a href="dectrees.html">DecTrees</a></li><li><a href="svms.html">SVMs</a></li><li><a href="regression.html">Regression</a></li><li><a href="nn.html">NN</a></li><li><a href="conclusions.html">Conclusions</a></li><li><a href="about.html">About Me</a></li></ul></nav>
+<nav class="top"><div class="in">
+<a class="brand" href="index.html">Air Quality &amp; Lung Health</a>
+<ul><li><a href="index.html">Home</a></li><li><a href="introduction.html">Introduction</a></li><li><a href="dataprep_eda.html" class=active>DataPrep_EDA</a></li><li class="has-dd"><button class="" aria-haspopup="true">Unsupervised &#9662;</button><div class="dd"><a href="clustering.html">Clustering</a><a href="pca.html">PCA</a></div></li><li class="has-dd"><button class="" aria-haspopup="true">Supervised &#9662;</button><div class="dd"><a href="naivebayes.html">NaiveBayes</a><a href="dectrees.html">DecTrees</a><a href="svms.html">SVMs</a><a href="regression.html">Regression</a><a href="nn.html">NN</a></div></li><li><a href="conclusions.html">Conclusions</a></li><li><a href="about.html">About Me</a></li></ul>
+<div class="tools"><a href="https://github.com/himanshumjain15/Air_quality_index_project" aria-label="GitHub repository"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+<button id="theme" aria-label="Toggle dark mode"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></button></div>
+</div></nav>
 <main>
 
-<section>
-<h2>DataPrep / EDA</h2>
+<h1>DataPrep_EDA</h1>
+<p class="sub">How the data were gathered, cleaned and explored</p>
 <p>This tab documents how, where and why the data were gathered, how they were cleaned, and what exploratory visualization reveals. The goal is to combine <b>air quality</b> and <b>weather</b> measurements for large US cities with <b>county-level respiratory health</b> statistics, so that the questions on the Introduction tab can be examined from several angles. The data cover 55 cities across the United States for the 365 days of 2023, plus health measures for nearly 3,000 counties.</p>
-<p><b>Code:</b> data gathering <a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/01_gather_data.py"><code>01_gather_data.py</code></a>, cleaning and EDA <a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/02_clean_eda.py"><code>02_clean_eda.py</code></a> (Python 3.10; packages <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code>, <code>seaborn</code>). The whole repository is at <a href="https://github.com/himanshumjain15/Air_quality_index_project">github.com/himanshumjain15/Air_quality_index_project</a>.</p>
-</section>
 
 <section>
-<h2>1. Where and how the data were gathered</h2>
+<h2>Data Sources</h2>
 <table>
 <tr><th>Source</th><th>Content</th><th>How obtained</th><th>Raw data</th></tr>
 <tr><td><b>Open-Meteo Air Quality API</b><br><a href="https://open-meteo.com/en/docs/air-quality-api">open-meteo.com</a></td>
@@ -42,7 +44,14 @@
 <td><a href="data/raw/cities_reference.csv">cities_reference.csv</a></td></tr>
 </table>
 
-<h3>API endpoints and example GET requests</h3>
+<h3>Why these data</h3>
+<p>Weather and air quality change every day, so hourly and daily values give thousands of observations for the questions about ozone, rain, wind and smoke. Health outcomes change slowly and are reported per county, so they add a second layer: asthma and COPD prevalence can become categories (High or Low) or numbers, which suits classification, clustering and regression later in the project. The data mix <b>quantitative</b> variables (concentrations, temperatures) with <b>qualitative</b> ones (AQI category, region, season, asthma level) and include both labeled and unlabeled variables.</p>
+<div class="note"><b>Limitation.</b> Open-Meteo's air quality values are estimates from an atmospheric (CAMS) model on a coarse grid, not readings from a monitor in the city center. They capture regional patterns and large events well, but can differ from station data, especially in coastal and mountain areas. The health values are also model-based estimates for whole counties.</div>
+</section>
+
+<section>
+<h2>APIs Used</h2>
+<p>Two of the sources are true APIs queried from Python; the CDC data are pulled from an open data API as well. Each call below is an example of a core endpoint with a GET request.</p>
 <p><b>Air quality:</b> <code>https://air-quality-api.open-meteo.com/v1/air-quality</code></p>
 <pre>GET https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.01&amp;longitude=-105.27&amp;start_date=2023-01-01&amp;end_date=2023-12-31&amp;hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi&amp;timezone=auto</pre>
 <p><b>Weather:</b> <code>https://archive-api.open-meteo.com/v1/archive</code></p>
@@ -50,13 +59,33 @@
 <p><b>CDC PLACES:</b> <code>https://data.cdc.gov/resource/swc5-untb.json</code></p>
 <pre>GET https://data.cdc.gov/resource/swc5-untb.json?$where=measureid in ('CASTHMA','COPD')&amp;$limit=100000</pre>
 
-<h3>Why these data</h3>
-<p>Weather and air quality change every day, so hourly and daily values give thousands of observations for the questions about ozone, rain, wind and smoke. Health outcomes change slowly and are reported per county, so they add a second, unlabeled-to-labeled layer: asthma and COPD prevalence can become categories (High or Low) or numbers, which suits classification, clustering and regression later in the project. The data mix <b>quantitative</b> variables (concentrations, temperatures) with <b>qualitative</b> ones (AQI category, region, season, asthma level) and include both labeled and unlabeled variables.</p>
-<div class="note"><b>Limitation.</b> Open-Meteo's air quality values are estimates from an atmospheric (CAMS) model on a coarse grid, not readings from a monitor in the city center. They capture regional patterns and large events well, but can differ from station data, especially in coastal and mountain areas. The health values are also model-based estimates for whole counties.</div>
 </section>
 
 <section>
-<h2>2. Raw data and cleaned data</h2>
+<h2>Raw Data Access</h2>
+<ul>
+<li><a href="data/raw/openmeteo_air_quality_hourly_raw.csv">Open-Meteo hourly air quality (raw CSV)</a></li>
+<li><a href="data/raw/openmeteo_weather_daily_raw.csv">Open-Meteo daily weather (raw CSV)</a></li>
+<li><a href="data/raw/cdc_places_county_raw.csv">CDC PLACES county health (raw CSV)</a></li>
+<li><a href="data/raw/cities_reference.csv">City reference table (CSV)</a></li>
+<li>Cleaned files: <a href="data/clean/daily_city_air_weather_clean.csv">daily</a>, <a href="data/clean/county_health_clean.csv">county health</a>, <a href="data/clean/city_air_weather_health_clean.csv">city level</a>, and the <a href="data/clean/cleaning_log.txt">cleaning log</a></li>
+</ul>
+</section>
+
+<section>
+<h2>Code</h2>
+<p>All code is written in Python 3.10 with the packages <code>requests</code>, <code>pandas</code>, <code>numpy</code>, <code>matplotlib</code> and <code>seaborn</code>.</p>
+<ul>
+<li><a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/01_gather_data.py"><code>01_gather_data.py</code></a> gathers the raw data from the APIs.</li>
+<li><a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/02_clean_eda.py"><code>02_clean_eda.py</code></a> cleans the data and creates the figures.</li>
+<li><a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/03_intro_image.py"><code>03_intro_image.py</code></a> creates the Introduction image.</li>
+<li><a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/build_site.py"><code>build_site.py</code></a> generates the website pages.</li>
+</ul>
+<p>The whole repository is at <a href="https://github.com/himanshumjain15/Air_quality_index_project">github.com/himanshumjain15/Air_quality_index_project</a>.</p>
+</section>
+
+<section>
+<h2>Raw and Cleaned Data</h2>
 <p>Small previews of the first rows are shown below (the full files are linked above and in the repository).</p>
 <h3>Raw</h3>
 <figure><img src="images/raw_air_quality.png" alt="Raw air quality"><figcaption>Raw hourly air quality as returned by the API, one row per city and hour.</figcaption></figure>
@@ -69,7 +98,7 @@
 </section>
 
 <section>
-<h2>3. Cleaning steps</h2>
+<h2>Cleaning Pipeline</h2>
 <ol>
 <li><b>Checks on the API data.</b> Timestamps were parsed and every column was checked for duplicates, negative concentrations and missing values. None were found in the raw API data (0 duplicates, 0 negative values, 0 missing values), so no imputation was needed. The code still contains the safeguards (clipping at zero and short-gap interpolation) so that a future download would be handled.</li>
 <li><b>Hourly to daily.</b> Hourly air quality was aggregated to one row per city and day: mean PM2.5, PM10, CO, NO2 and SO2, maximum ozone and maximum AQI. Days with fewer than 18 valid hours would have been dropped; all 20,075 city-days passed.</li>
@@ -83,7 +112,7 @@
 </section>
 
 <section>
-<h2>4. Exploratory visualizations</h2>
+<h2>Exploratory Data Visualizations</h2>
 <figure class="small"><a href="images/eda_01_missing_raw.png"><img src="images/eda_01_missing_raw.png" alt="Missing values in the raw API data"></a><figcaption><b>Missing values in the raw API data.</b> Every column pulled from the two Open-Meteo APIs is complete, with 0% missing across 481,800 hourly air quality rows and 20,075 daily weather rows. Missing values appeared instead in the CDC health table (10 values) and as five cities with no matching county record.</figcaption></figure>
 <figure class="small"><a href="images/eda_02_pm25_distribution.png"><img src="images/eda_02_pm25_distribution.png" alt="Distribution of daily PM2.5"></a><figcaption><b>Distribution of daily PM2.5.</b> The typical city-day has a PM2.5 of 9.3 micrograms per cubic meter, but the distribution has a long right tail that reaches 79. About 17% of all city-days exceed the WHO 24-hour guideline of 15.</figcaption></figure>
 <figure><a href="images/eda_03_monthly_pm25.png"><img src="images/eda_03_monthly_pm25.png" alt="Monthly PM2.5 variation"></a><figcaption><b>Monthly PM2.5 variation.</b> Median PM2.5 is highest in July (12.0) and lowest in October (7.2). June has the highest average (14.3) even though its median is 11.5, which reflects the short, extreme smoke episodes of that month.</figcaption></figure>
@@ -103,5 +132,12 @@
 
 </main>
 <footer>CSCI 5612 course project &middot; <a href="https://github.com/himanshumjain15/Air_quality_index_project">Source code and data on GitHub</a></footer>
+<script>
+document.getElementById('theme').addEventListener('click',function(){
+var d=document.documentElement,n=d.getAttribute('data-theme')==='dark'?'light':'dark';
+d.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}});
+document.querySelectorAll('nav.top li.has-dd>button').forEach(function(b){
+b.addEventListener('click',function(){b.parentElement.classList.toggle('open')})});
+</script>
 </body>
 </html>
