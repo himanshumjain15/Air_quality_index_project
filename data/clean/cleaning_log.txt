@@ -9,6 +9,7 @@ CDC PLACES: 10 crude prevalence values are missing and dropped
 Clean county health table: (2956, 17), NAs in key columns 0
 City table: 55 cities; no CDC county record for ['Baltimore', 'Louisville', 'Philadelphia', 'Pittsburgh', 'St. Louis'] (PA/KY absent and independent cities not in PLACES) -> dropped from the merged city table
 Clean merged city table: (50, 32), NAs 0
+Outlier check (IQR rule, per city): 765 of 20075 city-days (3.8%) flagged; all kept as plausible values (extremes fall in the June 2023 smoke period)
 SUMMARY daily_rows: 20075
 SUMMARY cities_daily: 55
 SUMMARY cities_merged: 50

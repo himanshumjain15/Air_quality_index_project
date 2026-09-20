@@ -184,6 +184,18 @@ intro = f"""
 <li>Which weather conditions are the best warning signs that a day will have unhealthy air, and can an air quality category be forecast from weather alone?</li>
 </ol>
 </section>
+
+<section>
+<h2>Sources</h2>
+<ul>
+<li>World Health Organization, <a href="https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health">Ambient (outdoor) air quality and health</a></li>
+<li>World Health Organization, <a href="https://www.who.int/news-room/fact-sheets/detail/chronic-obstructive-pulmonary-disease-(copd)">Chronic obstructive pulmonary disease (COPD)</a></li>
+<li>US EPA and AirNow, <a href="https://www.airnow.gov/aqi/aqi-basics/">Air Quality Index basics</a></li>
+<li>US EPA, <a href="https://www.epa.gov/pm-pollution/particulate-matter-pm-basics">Particulate matter (PM) basics</a></li>
+<li>US EPA, <a href="https://www.epa.gov/clean-air-act-overview">Clean Air Act overview</a></li>
+<li>US Centers for Disease Control and Prevention, <a href="https://www.cdc.gov/asthma/">Asthma</a> and <a href="https://www.cdc.gov/places/">PLACES local health data</a></li>
+</ul>
+</section>
 """
 
 # ============================================================================ DATAPREP_EDA
@@ -191,8 +203,8 @@ RAWLINK = "data/raw/"
 CLEANLINK = "data/clean/"
 
 FIGS = [
-    ("eda_01_missing_raw.png", "Missing values in the raw API data",
-     "Every column pulled from the two Open-Meteo APIs is complete, with 0% missing across 481,800 hourly air quality rows and 20,075 daily weather rows. Missing values appeared instead in the CDC health table (10 values) and as five cities with no matching county record.", True),
+    ("eda_01_missing_raw.png", "Where data were missing before cleaning",
+     "The two Open-Meteo APIs returned complete data (0% missing across 481,800 hourly rows and 20,075 daily weather rows), and only 10 CDC prevalence values (0.03%) were missing. The largest gap is structural: 5 of 55 cities (9.1%) have no matching county in the CDC file.", True),
     ("eda_02_pm25_distribution.png", "Distribution of daily PM2.5",
      "The typical city-day has a PM2.5 of 9.3 micrograms per cubic meter, but the distribution has a long right tail that reaches 79. About 17% of all city-days exceed the WHO 24-hour guideline of 15.", True),
     ("eda_03_monthly_pm25.png", "Monthly PM2.5 variation",
@@ -221,6 +233,8 @@ FIGS = [
      "The Northeast has the highest PM2.5 (13.9) but the lowest COPD (4.8%), while the Midwest has the highest asthma (10.9%) and COPD (6.7%). Pollution alone does not explain the regional pattern of lung disease.", False),
     ("eda_15_season_region.png", "PM2.5 by season and region",
      "Summer has the highest average PM2.5 (13.0) and fall the lowest (8.5), with winter at 10.0 and spring at 11.1. The bars are split by region to show that the seasonal peak is not the same everywhere.", True),
+    ("eda_16_outlier_check.png", "Outlier check on daily PM2.5",
+     "Applying the interquartile-range rule within each city flags 765 of 20,075 city-days (3.8%), shown as red dots for the ten cities with the most extreme days. The most extreme value (Pittsburgh, 78.7 on June 29) falls in the documented June 2023 smoke period, so flagged days were kept as plausible values and not treated as errors.", False),
 ]
 
 fig_html = "\n".join(fig(*f) for f in FIGS)
@@ -311,7 +325,7 @@ dataprep = f"""
 <li><b>Checks on the API data.</b> Timestamps were parsed and every column was checked for duplicates, negative concentrations and missing values. None were found in the raw API data (0 duplicates, 0 negative values, 0 missing values), so no imputation was needed. The code still contains the safeguards (clipping at zero and short-gap interpolation) so that a future download would be handled.</li>
 <li><b>Hourly to daily.</b> Hourly air quality was aggregated to one row per city and day: mean PM2.5, PM10, CO, NO2 and SO2, maximum ozone and maximum AQI. Days with fewer than 18 valid hours would have been dropped; all 20,075 city-days passed.</li>
 <li><b>Weather join.</b> Daily weather columns were renamed (for example <code>temperature_2m_mean</code> to <code>temp_mean</code>) and merged with air quality on city and date.</li>
-<li><b>Outliers.</b> Only physically impossible values were treated as errors (PM2.5 above 1000, temperature above 60 C, and similar). None were found. Very high PM2.5 days in June 2023 are <b>real</b> smoke events and were deliberately kept.</li>
+<li><b>Outliers.</b> Two checks were used. First, physically impossible values (PM2.5 above 1000, temperature above 60 C, and similar) would be removed as errors, and none were found. Second, the interquartile-range rule within each city flagged 765 of 20,075 city-days (3.8%) (see the outlier figure below). The most extreme values fall in the June 2023 wildfire smoke period, so the flagged days were kept as plausible values, because removing them would hide exactly the episodes the project studies.</li>
 <li><b>Health data.</b> Only crude prevalence rows were kept (age-adjusted rows duplicate them), values were converted to numbers, 10 missing values were dropped, and the ten measures were pivoted into columns. Counties missing any of asthma, COPD, smoking or obesity were removed, leaving <b>2,956 counties</b>.</li>
 <li><b>Unmatched cities.</b> The CDC file has no rows for Pennsylvania or Kentucky and does not list independent cities such as Baltimore City and St. Louis City. Philadelphia, Pittsburgh, Louisville, Baltimore and St. Louis therefore have air and weather data but no health match, and were left out of the merged city table (<b>50 cities</b> remain). Their daily data are still used in the daily table.</li>
 <li><b>New variables.</b> AQI category (EPA bins), season, Census region, a rainy-day flag (at least 1 mm), the share of days with AQI above 100, a High/Low asthma level (median split) and a Low/Medium/High PM2.5 level (tertiles) were added by discretization.</li>
@@ -414,7 +428,7 @@ home = f"""
 <h2>Where to start</h2>
 <div class="start">
 <a href="introduction.html"><b>Introduction</b><span>Why air, weather and lung health belong together, plus ten guiding questions</span></a>
-<a href="dataprep_eda.html"><b>DataPrep_EDA</b><span>Data sources, APIs, cleaning steps and 15 visualizations</span></a>
+<a href="dataprep_eda.html"><b>DataPrep_EDA</b><span>Data sources, APIs, cleaning steps and 16 visualizations</span></a>
 <a href="conclusions.html"><b>Conclusions</b><span>What it all means (coming at the end of the course)</span></a>
 </div>
 """

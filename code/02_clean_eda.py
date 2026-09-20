@@ -87,14 +87,6 @@ log(f"Raw shapes  air quality {aq_raw.shape}, weather {wx_raw.shape}, CDC PLACES
 # ----------------------------------------------------------------------------- figure 1: missingness (raw)
 miss = pd.concat([aq_raw.isna().mean(), wx_raw.isna().mean()]).drop(["city", "state", "time"], errors="ignore")
 miss = miss[miss > 0].sort_values()
-fig, ax = plt.subplots(figsize=(8, 4.5))
-if len(miss):
-    ax.barh(miss.index, miss.values * 100, color=ORANGE)
-else:
-    ax.text(0.5, 0.5, "No missing values in raw API data", ha="center", va="center", transform=ax.transAxes)
-ax.set_xlabel("Missing values (%)")
-ax.set_title("Share of missing values per column in the raw API data")
-save(fig, "eda_01_missing_raw.png")
 log("Missing (raw, % of rows):\n" + (miss * 100).round(2).to_string() if len(miss) else "Missing (raw): none")
 
 # ----------------------------------------------------------------------------- clean air quality
@@ -160,6 +152,7 @@ table_image(daily.drop(columns=["season", "rainy", "region"]), "clean_daily.png"
 pl = places_raw.copy()
 pl = pl[pl["data_value_type"] == "Crude prevalence"].copy()
 pl["data_value"] = pd.to_numeric(pl["data_value"], errors="coerce")
+places_na_pct = float(pl["data_value"].isna().mean()) * 100
 log(f"CDC PLACES: {int(pl['data_value'].isna().sum())} crude prevalence values are missing and dropped")
 pl = pl.dropna(subset=["data_value"])
 health = pl.pivot_table(index=["stateabbr", "locationname", "locationid"], columns="measureid",
@@ -208,6 +201,7 @@ health["_k"] = health["county"].str.lower()
 city = city.merge(health.drop(columns=["county", "region", "lat", "lon", "locationid"], errors="ignore"),
                   left_on=["state", "_k"], right_on=["state", "_k"], how="left").drop(columns="_k")
 no_match = city[city["asthma"].isna()]["city"].tolist()
+no_match_pct = len(no_match) / len(city) * 100
 log(f"City table: {len(city)} cities; no CDC county record for {no_match} (PA/KY absent and independent "
     f"cities not in PLACES) -> dropped from the merged city table")
 city = city.dropna(subset=["asthma", "copd"]).reset_index(drop=True)
@@ -258,6 +252,10 @@ ax.set_xticklabels([l.replace(" for Sensitive", "\nfor Sensitive").replace("Very
                     for l in AQI_LABELS], fontsize=9)
 ax.set_ylabel("City-days")
 ax.set_yscale("log")
+ax.grid(axis="x", visible=False)
+for i, v in enumerate(cat_counts.values):
+    ax.text(i, max(v, 1) * 1.15, f"{int(v):,}", ha="center", fontsize=9)
+ax.set_ylim(top=cat_counts.max() * 3)
 ax.set_title("City-days in each US AQI category (log scale)")
 save(fig, "eda_05_aqi_categories.png")
 
@@ -315,10 +313,11 @@ save(fig, "eda_10_asthma_distribution.png")
 fig, ax = plt.subplots(figsize=(8.5, 5.5))
 sns.regplot(data=city, x="pm2_5_mean", y="asthma", scatter_kws={"s": 45, "color": BLUE},
             line_kws={"color": RED}, ax=ax)
-for _, r in city.nlargest(4, "pm2_5_mean").iterrows():
-    ax.annotate(r["city"], (r["pm2_5_mean"], r["asthma"]), fontsize=8, xytext=(4, 4), textcoords="offset points")
-for _, r in city.nlargest(3, "asthma").iterrows():
-    ax.annotate(r["city"], (r["pm2_5_mean"], r["asthma"]), fontsize=8, xytext=(4, -10), textcoords="offset points")
+OFFSETS = {"Indianapolis": (-62, 4), "Milwaukee": (6, -12), "Detroit": (6, -12)}
+labeled = pd.concat([city.nlargest(4, "pm2_5_mean"), city.nlargest(3, "asthma")]).drop_duplicates("city")
+for _, r in labeled.iterrows():
+    ax.annotate(r["city"], (r["pm2_5_mean"], r["asthma"]), fontsize=8,
+                xytext=OFFSETS.get(r["city"], (5, 5)), textcoords="offset points")
 ax.set_xlabel("Mean daily PM2.5 in 2023 (ug/m3)")
 ax.set_ylabel("Adult asthma prevalence (%)")
 r_val = city["pm2_5_mean"].corr(city["asthma"])
@@ -355,9 +354,12 @@ for ax, col, ttl in zip(axes, ["pm2_5_mean", "asthma", "copd"],
     reg[col].plot.bar(ax=ax, color=BLUE)
     ax.set_title(ttl)
     ax.set_xlabel("")
+    ax.grid(axis="x", visible=False)
     ax.tick_params(axis="x", rotation=30)
-fig.suptitle("Regional averages across the study cities", y=1.02)
-save(fig, "eda_14_regions.png")
+fig.suptitle("Regional averages across the study cities", y=0.99, fontsize=13)
+fig.tight_layout(rect=[0, 0, 1, 0.94])
+fig.savefig(IMG / "eda_14_regions.png", dpi=130)
+plt.close(fig)
 
 # 15 seasonal weather relation: PM2.5 by season and region
 fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -368,6 +370,40 @@ ax.set_xlabel("")
 ax.set_title("Mean PM2.5 by season and region")
 ax.legend(fontsize=8)
 save(fig, "eda_15_season_region.png")
+
+# 1 missing or unmatched data by source (before cleaning)
+gaps = pd.Series({"Air quality API values": aq_raw.drop(columns=["city", "state", "time"]).isna().mean().mean() * 100,
+                  "Weather API values": wx_raw.drop(columns=["city", "state", "date"], errors="ignore").isna().mean().mean() * 100,
+                  "CDC PLACES prevalence values": places_na_pct,
+                  "Cities with no CDC county match": no_match_pct})
+fig, ax = plt.subplots(figsize=(8.5, 4))
+bars = ax.barh(gaps.index, gaps.values, color=[BLUE, BLUE, ORANGE, RED])
+ax.invert_yaxis()
+ax.set_xlim(0, max(12, gaps.max() * 1.25))
+ax.grid(axis="y", visible=False)
+for b, v in zip(bars, gaps.values):
+    ax.text(v + 0.2, b.get_y() + b.get_height() / 2, f"{v:.2f}%", va="center", fontsize=10)
+ax.set_xlabel("Missing or unmatched (% of values or cities)")
+ax.set_title("Where data were missing before cleaning")
+save(fig, "eda_01_missing_raw.png")
+
+# 16 outlier check (IQR rule per city) on daily PM2.5
+q1 = daily.groupby("city")["pm2_5"].transform(lambda s: s.quantile(0.25))
+q3 = daily.groupby("city")["pm2_5"].transform(lambda s: s.quantile(0.75))
+daily["_out"] = daily["pm2_5"] > q3 + 1.5 * (q3 - q1)
+out_share = daily.groupby("city")["_out"].mean().sort_values(ascending=False)
+log(f"Outlier check (IQR rule, per city): {int(daily['_out'].sum())} of {len(daily)} city-days "
+    f"({daily['_out'].mean():.1%}) flagged; all kept as plausible values (extremes fall in the June 2023 smoke period)")
+top = out_share.head(10).index.tolist()
+fig, ax = plt.subplots(figsize=(9, 5))
+order = daily[daily.city.isin(top)].groupby("city")["pm2_5"].median().sort_values().index
+sns.boxplot(data=daily[daily.city.isin(top)], y="city", x="pm2_5", order=order, color="#9db8ee",
+            fliersize=2, flierprops={"markerfacecolor": RED, "markeredgecolor": RED}, ax=ax)
+ax.set_xlabel("Daily mean PM2.5 (ug/m3); red dots are IQR-rule outliers")
+ax.set_ylabel("")
+ax.set_title("Outlier check: the ten cities with the most extreme PM2.5 days")
+save(fig, "eda_16_outlier_check.png")
+daily = daily.drop(columns="_out")
 
 # ----------------------------------------------------------------------------- summary numbers for the write-up
 summary = {
