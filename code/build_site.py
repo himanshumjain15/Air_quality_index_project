@@ -13,8 +13,10 @@ NAV = [
     ("introduction.html", "Introduction"),
     ("dataprep_eda.html", "DataPrep_EDA"),
     ("Unsupervised", [("clustering.html", "Clustering"), ("pca.html", "PCA")]),
+    # Latest course instruction: SVM and NN tabs removed; Regression, AdaBoost, GradientBoosting and XGBoost added.
     ("Supervised", [("naivebayes.html", "NaiveBayes"), ("dectrees.html", "DecTrees"),
-                    ("svms.html", "SVMs"), ("regression.html", "Regression"), ("nn.html", "NN")]),
+                    ("regression.html", "Regression"), ("adaboost.html", "AdaBoost"),
+                    ("gradientboosting.html", "GradientBoosting"), ("xgboost.html", "XGBoost")]),
     ("conclusions.html", "Conclusions"),
     ("about.html", "About Me"),
 ]
@@ -566,14 +568,17 @@ MODELS = [
     ("dectrees.html", "DecTrees", "Module 3",
      "Decision trees to find which weather conditions best warn of unhealthy air, in a form that is easy to read.",
      "daily_city_air_weather_clean.csv"),
-    ("svms.html", "SVMs", "Module 4",
-     "Support vector machines with several kernels to classify air quality or asthma level, with comparisons and confusion matrices.",
-     "daily_city_air_weather_clean.csv"),
-    ("regression.html", "Regression", "Module 5",
+    ("regression.html", "Regression", "a later part of the course",
      "Linear regression to estimate PM2.5 or COPD prevalence from weather and lifestyle variables.",
      "county_health_clean.csv"),
-    ("nn.html", "NN", "Module 5",
-     "Neural networks for predicting air quality categories or pollutant levels, compared against the earlier methods.",
+    ("adaboost.html", "AdaBoost", "a later part of the course",
+     "AdaBoost, an ensemble that combines many simple decision trees and gives extra weight to the cases that earlier trees got wrong, to predict the AQI category or asthma level.",
+     "daily_city_air_weather_clean.csv"),
+    ("gradientboosting.html", "GradientBoosting", "a later part of the course",
+     "Gradient boosting, which builds trees one after another so that each corrects the errors of the previous ones, to predict PM2.5 or the AQI category.",
+     "daily_city_air_weather_clean.csv"),
+    ("xgboost.html", "XGBoost", "a later part of the course",
+     "XGBoost, an optimized and regularized version of gradient boosting, to predict air quality and compare it with AdaBoost and the other boosting methods.",
      "daily_city_air_weather_clean.csv"),
 ]
 
@@ -635,8 +640,7 @@ home = f"""
 <li>Data preparation and exploratory analysis: <b>complete</b></li>
 <li>Clustering and PCA: <b>complete</b></li>
 <li>Naive Bayes and decision trees: to come</li>
-<li>Support vector machines: to come</li>
-<li>Regression and neural networks: to come</li>
+<li>Regression, AdaBoost, GradientBoosting and XGBoost: to come</li>
 </ul>
 <h2>Where to start</h2>
 <div class="start">
