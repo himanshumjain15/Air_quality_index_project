@@ -5,3 +5,4 @@
 .env
 *.key
 .DS_Store
+CLAUDE.md
