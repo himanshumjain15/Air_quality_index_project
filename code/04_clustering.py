@@ -45,6 +45,28 @@ def save(fig, name):
     plt.close(fig)
 
 
+def before_image(df, label_cols, num_cols, name, title):
+    """Image of the cleaned table BEFORE transforming: label columns (orange) are removed later, values are in original units."""
+    sample = df[label_cols + num_cols].head(7).copy()
+    for c in num_cols:
+        sample[c] = sample[c].round(2)
+    fig, ax = plt.subplots(figsize=(13, 3.2))
+    ax.axis("off")
+    ax.set_title(title, loc="left", fontsize=11, fontweight="bold")
+    t = ax.table(cellText=sample.astype(str).values, colLabels=sample.columns, loc="center", cellLoc="center")
+    t.auto_set_font_size(False)
+    t.set_fontsize(9)
+    t.scale(1, 1.5)
+    for (r, c), cell in t.get_celld().items():
+        is_label = c < len(label_cols)
+        if r == 0:
+            cell.set_facecolor("#c2661d" if is_label else "#4b4fa3")
+            cell.set_text_props(color="white", fontweight="bold")
+        else:
+            cell.set_facecolor("#fdebd3" if is_label else "#ffffff")
+    save(fig, name)
+
+
 # ------------------------------------------------------------------ data
 city = pd.read_csv(CLEAN / "city_air_weather_health_clean.csv")
 names = (city["city"] + ", " + city["state"]).tolist()
@@ -54,11 +76,16 @@ X.to_csv(CLEAN / "clustering_input_numeric.csv", index=False)
 pd.DataFrame(Xs, columns=FEATURES).round(4).to_csv(CLEAN / "clustering_input_scaled.csv", index=False)
 res = {"n_cities": len(city), "n_features": len(FEATURES), "features": FEATURES}
 
+before_image(city, ["city", "state", "region", "asthma_level"],
+             ["pm2_5_mean", "no2_mean", "co_mean", "temp_mean", "precip_total", "smoking", "copd"],
+             "cluster_01a_data_before.png",
+             "BEFORE: cleaned city table (orange label columns are removed; numbers are in original units)")
+
 # ------------------------------------------------------------------ sample image (data prep)
 sample = pd.DataFrame(Xs[:7, :10], columns=FEATURES[:10]).round(2)
 fig, ax = plt.subplots(figsize=(13, 3.2))
 ax.axis("off")
-ax.set_title("Clustering input: standardized numeric matrix (first 7 rows, first 10 of 20 columns)",
+ax.set_title("AFTER: clustering input, labels removed and every column standardized (first 7 rows, first 10 of 20 columns)",
              loc="left", fontsize=11, fontweight="bold")
 t = ax.table(cellText=sample.astype(str).values, colLabels=sample.columns, loc="center", cellLoc="center")
 t.auto_set_font_size(False)
