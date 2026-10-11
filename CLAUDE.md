@@ -38,6 +38,8 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - `build_site.py` has been run successfully on the Mac setup. `code/02_clean_eda.py` has NOT been re-run under pandas 3. Do not re-run it until it has been checked for pandas 3 compatibility (it regenerates `data/clean/` and `images/`).
 - Site design copies a classmate's demo (Quarto-style): serif headings, IBM Plex Sans, indigo accent, dropdown nav (Unsupervised, Supervised), dark-mode toggle.
 
+- Canvas rubric (Part 2, all-or-nothing criteria; expect the same pattern later): Website UI = easily accessible tab names; Overview = method and distance metrics (or PCA, eigen, dimensionality) explained with 2+ images and how it is used in the project; Data Prep and code = images of the data frame BEFORE and AFTER transforming, well explained, plus an accessible link to the code (never paste code or code images), in R or Python; Results = explained with images (clustering: dendrogram, cluster images, 3+ k values, silhouette best k, k-means vs hclust comparison; PCA: how to visualize variable-component relationships); Conclusions must be non-technical and tied to the topic.
+
 ## Working conventions
 - Do NOT add a "Co-Authored-By: Claude" trailer to commits. The user had Claude removed from the GitHub contributors list (history was rewritten and force-pushed once).
 - Force-pushes and history rewrites need explicit user approval.
@@ -46,7 +48,7 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - Never fabricate results; check numbers against the data before writing captions. Say plainly when a result is null or weak.
 
 ## Open items
-- Introduction facts (WHO 7 million deaths, 25 million US asthma cases, 400+ AQI in June 2023) are not yet verified against sources. Two CDC links in the Sources list returned 403 to scripts and were not checked.
+- Introduction facts checked by web search on 2026-10-11: WHO combined air pollution deaths = 6.7 million (2024 fact sheet; old 7 million figure replaced), US asthma ~25 million (CDC 2020 NHIS) OK, NYC AQI on 2023-06-07 was reported above 350 by IQAir (the earlier 400+ claim had no source and was replaced). Two CDC links in the Sources list return 403 to scripts and need a manual browser check.
 - Model tabs NaiveBayes through NN and Conclusions are placeholders to fill in as each part comes due. Introduction now has 5 paragraphs and 3 images (still to be fact-checked).
 - Submission each part: a .docx named with the student's name and the project part, containing only the site URL, uploaded to Canvas.
 - Student: Himanshu Jain, MS Data Science, CU Boulder. Machine moved from Windows to a new Mac (setup confirmed working).
