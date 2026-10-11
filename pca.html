@@ -19,17 +19,69 @@
 <main>
 
 <h1>PCA</h1>
-<p class="sub">Analysis tab, to be completed in Module 2</p>
+<p class="sub">Reducing 13 daily air quality and weather measurements to a few patterns</p>
+<p>Principal component analysis (PCA) takes many related numeric variables and rewrites them as a smaller set of new, uncorrelated variables that keep as much of the original variation as possible. Here it is applied to the 20,075 city-days of the daily table, which describe each day with 13 pollutant and weather measurements. The write-up is organized into Overview, Data Prep, Code, Results and Conclusions.</p>
+
 <section>
-<div class="soon"><b>Coming in Module 2.</b> This tab will be completed as the course progresses.</div>
-<h3>Overview</h3>
-<p>Principal component analysis to reduce the correlated pollutant and weather variables to a few components that can be visualized.</p>
-<h3>Data</h3>
-<p>Planned dataset: <a href="data/clean/daily_city_air_weather_clean.csv">daily_city_air_weather_clean.csv</a> (cleaned). Raw sources are listed on the <a href="dataprep_eda.html">DataPrep_EDA</a> tab.</p>
-<h3>Code</h3>
-<p>To be added.</p>
-<h3>Results</h3>
-<p>To be added.</p>
+<h2>Overview</h2>
+<p><b>PCA</b> is an unsupervised, linear method for dimensionality reduction. It looks for the direction in the data along which the observations spread out the most, calls it the first principal component, then looks for the direction of greatest remaining spread that is perpendicular to the first, and so on. Each principal component is a weighted combination of the original variables, the components are uncorrelated with each other, and they are ordered by how much variation they carry. Keeping only the first few therefore compresses the data while discarding the least informative directions.</p>
+<h3>Eigenvalues and eigenvectors</h3>
+<p>The mathematics sits in the <b>covariance matrix</b> of the standardized variables, which records how every pair of variables moves together. An <b>eigenvector</b> of this matrix is a direction that the matrix only stretches and does not rotate, and the amount of stretching is its <b>eigenvalue</b>. For PCA the eigenvectors are the principal components (the axes), the eigenvalue of each one is the variance of the data along that axis, and the eigenvalue divided by the sum of all eigenvalues is the share of the total variance that component explains. Sorting the eigenvectors from the largest eigenvalue to the smallest gives PC1, PC2, and so on.</p>
+<p><b>Singular value decomposition (SVD)</b> reaches the same answer without forming the covariance matrix. A centered data matrix X with n rows is factored as X = U &Sigma; V<sup>T</sup>, where the columns of V are the principal directions (the eigenvectors) and the squared singular values divided by n - 1 are the eigenvalues. Statistical packages usually compute PCA this way because it is numerically stable. The code for this tab checks the equivalence on the actual data: the eigenvalues from the covariance matrix, from scikit-learn and from the SVD agree to about 10<sup>-14</sup>.</p>
+<figure><a href="images/pca_00a_concept.png"><img src="images/pca_00a_concept.png" alt="PCA finds the directions of greatest spread"></a><figcaption><b>PCA finds the directions of greatest spread.</b> On the left, the two arrows are the eigenvectors of two correlated variables, drawn with a length that reflects how much variance lies along each. On the right, the same points are rotated so that PC1 lies along the horizontal axis and holds most of the variance (the data are synthetic).</figcaption></figure>
+<h3>Dimensionality reduction and the challenges of many dimensions</h3>
+<p><b>Dimensionality reduction</b> means describing each observation with fewer variables while losing as little information as possible. It matters for several reasons. People can only look at two or three dimensions at once, so reduction makes it possible to see structure in data that have many columns. Real measurements are often redundant (here PM2.5 and PM10 are almost the same signal, and the three temperature variables move together), and reduction removes this duplication, which also avoids the instability that correlated predictors cause in later models. Fewer variables mean faster computation and less noise.</p>
+<p>High-dimensional data bring particular problems that are often called the <b>curse of dimensionality</b>. As the number of dimensions grows, the space becomes so large that data points become sparse, and a fixed number of observations covers less and less of it. Distances also lose meaning, because the nearest and farthest neighbors of a point end up at almost the same distance, which damages methods based on distance such as clustering and nearest-neighbor classification. Models with many inputs overfit more easily, and results are harder to explain. Projecting the data onto a few principal components addresses these problems by keeping the directions that carry the signal.</p>
+<figure><a href="images/pca_00b_curse_of_dimensionality.png"><img src="images/pca_00b_curse_of_dimensionality.png" alt="The curse of dimensionality"></a><figcaption><b>The curse of dimensionality.</b> Averaged over 50 simulations of 300 random points, the ratio of the nearest to the farthest distance from one point climbs toward 1 as the number of dimensions grows, which means that neighbors stop looking different from strangers. The values come from a simulation of uniformly random points.</figcaption></figure>
+</section>
+
+<section>
+<h2>Data Prep</h2>
+<p>PCA requires a <b>numeric</b> matrix with <b>no missing values</b> and no label columns. Because it works on variance, variables with large units would dominate: carbon monoxide is measured in hundreds while precipitation is mostly near zero. Each column was therefore <b>centered and scaled</b> to a mean of 0 and a standard deviation of 1 before the analysis, so that PCA effectively decomposes the correlation matrix.</p>
+<p>The sample is the daily city table: <b>20,075 city-days by 13 numeric columns</b>. The variables are PM2.5, PM10, carbon monoxide, nitrogen dioxide, sulphur dioxide, maximum ozone, maximum AQI, mean, maximum and minimum temperature, precipitation, maximum wind speed and solar radiation. The city, state, date, month, season, region, AQI category and rainy-day flag were removed from the matrix and kept aside, to color the plots afterwards. Extreme smoke days were kept in the data, since they are real events, which means that they can pull the components toward pollution.</p>
+<figure><a href="images/pca_01_data_sample.png"><img src="images/pca_01_data_sample.png" alt="Sample of the data given to PCA"></a><figcaption><b>Sample of the data given to PCA.</b> Each row is one city-day and each column is one standardized measurement, with no names or labels attached; the first seven rows and ten of thirteen columns are shown. Pink cells are below the overall average and blue cells above it.</figcaption></figure>
+<ul>
+<li><a href="data/clean/pca_input_numeric.csv">pca_input_numeric.csv</a>: the full 20,075 x 13 numeric matrix in original units</li>
+<li><a href="data/clean/pca_scores_sample.csv">pca_scores_sample.csv</a>: the scores on the first five components for a random sample of 2,000 city-days, with the labels used for coloring</li>
+<li><a href="data/clean/daily_city_air_weather_clean.csv">daily_city_air_weather_clean.csv</a>: the cleaned daily table the matrix was taken from</li>
+</ul>
+</section>
+
+<section>
+<h2>Code</h2>
+<p>The analysis is written in <b>Python 3.14</b> with <code>pandas</code>, <code>numpy</code> (<code>numpy.linalg.svd</code>), <code>scikit-learn</code> (<code>StandardScaler</code>, <code>PCA</code>), <code>matplotlib</code> and <code>seaborn</code>.</p>
+<ul>
+<li><a href="https://github.com/himanshumjain15/Air_quality_index_project/blob/main/code/05_pca.py"><code>05_pca.py</code></a> on GitHub: standardizes the data, fits PCA, verifies the result with SVD, and draws every figure on this tab</li>
+<li><a href="data/clean/pca_results.json">pca_results.json</a>: all numbers quoted below (eigenvalues, loadings, scores)</li>
+</ul>
+</section>
+
+<section>
+<h2>Results</h2>
+<h3>How many components are needed</h3>
+<p>The first component explains <b>35.2%</b> of the total variance (eigenvalue 4.57), the second <b>27.1%</b> (3.52), and the third 9.6% (1.25), so the first two together carry <b>62.2%</b> and the first three <b>71.9%</b>. Three components have an eigenvalue above 1 (the Kaiser rule, which keeps components that explain more than one original variable's worth of variance). Reaching 80% of the variance takes 5 components, 90% takes 7 and 95% takes 8, so the 13 variables are reducible to a handful of patterns but not to just two.</p>
+<figure><a href="images/pca_02_scree.png"><img src="images/pca_02_scree.png" alt="Scree plot with cumulative variance"></a><figcaption><b>Scree plot with cumulative variance.</b> The bars show that the first two components stand well above the rest and the curve flattens after the third, while the orange line reaches 80% at five components and 95% at eight. The sharp drop after PC2 (27.1% to 9.6%) marks the natural place to stop for visualization.</figcaption></figure>
+<h3>Relationship between variables and components</h3>
+<p>Each component is a weighted sum of the variables, and the weights are called <b>loadings</b> (the entries of the eigenvector). A large positive or negative loading means that the variable contributes strongly to the component, and variables with loadings of the same sign move together along it. The heatmap reads as a recipe for each component.</p>
+<figure><a href="images/pca_03_loadings.png"><img src="images/pca_03_loadings.png" alt="Loadings of each variable on the first five components"></a><figcaption><b>Loadings of each variable on the first five components.</b> Red cells push a component up and blue cells push it down. PC1 is dominated by temperature, ozone, AQI and solar radiation, PC2 by nitrogen dioxide, carbon monoxide and particles, and PC3 by precipitation and wind.</figcaption></figure>
+<ul>
+<li><b>PC1 (35.2%), the warm and sunny axis.</b> Temperature (loadings 0.35 to 0.39), maximum ozone (0.37), AQI (0.37) and solar radiation (0.34) all load positively, with PM2.5 (0.28) and PM10 (0.30) smaller. The score correlates 0.80 with mean temperature and 0.80 with ozone. This is the chemistry of summer smog: sunny, hot days go together with high ozone.</li>
+<li><b>PC2 (27.1%), the combustion pollution axis.</b> Nitrogen dioxide (0.43), carbon monoxide (0.43), PM2.5 (0.35) and sulphur dioxide (0.34) load positively while temperatures load negatively (about -0.25). Its score correlates 0.66 with PM2.5. High values mean a day with traffic and heating pollution building up in cool, still air.</li>
+<li><b>PC3 (9.6%), the wet and windy axis.</b> Precipitation (0.77) and wind (0.44) load positively and solar radiation negatively (-0.31), which describes stormy, cloudy weather.</li>
+</ul>
+<figure><a href="images/pca_04_biplot.png"><img src="images/pca_04_biplot.png" alt="Biplot of city-days and variable loadings"></a><figcaption><b>Biplot of city-days and variable loadings.</b> Each dot is one city-day (colored by season) plotted by its scores on PC1 and PC2, and each arrow shows how one variable points in that plane, so arrows pointing the same way are positively correlated and arrows at right angles are unrelated. Summer days sit to the right with the temperature and ozone arrows, while winter days sit upward and to the left with the pollution arrows.</figcaption></figure>
+<p>The biplot shows the relationships directly. The three temperature arrows and solar radiation point almost the same way, which confirms that they are near-duplicates, and the pollutant arrows (nitrogen dioxide, carbon monoxide, sulphur dioxide and particles) form a second bundle that is roughly at a right angle to the temperature bundle, which means that heat and combustion pollution vary largely independently. PM2.5 sits between the two bundles, since fine particles come both from local combustion and from sunlight-driven chemistry and smoke. By season, the average PC1 score is 2.08 in summer and -1.74 in winter, and the average PC2 score is 1.11 in winter and -0.77 in summer.</p>
+<figure><a href="images/pca_05_aqi_categories.png"><img src="images/pca_05_aqi_categories.png" alt="City-days in the PC1 to PC2 plane, colored by AQI category"></a><figcaption><b>City-days in the PC1 to PC2 plane, colored by AQI category.</b> The unhealthy categories move steadily toward the upper right, with the average PC1 score rising from -1.55 on Good days to 3.44 on Unhealthy for Sensitive Groups, 5.24 on Unhealthy and 7.11 on Very Unhealthy days. The two components were built without any knowledge of the AQI category, so this separation shows that they capture the conditions that make air unhealthy.</figcaption></figure>
+<figure><a href="images/pca_06_3d.png"><img src="images/pca_06_3d.png" alt="The first three principal components"></a><figcaption><b>The first three principal components.</b> A random sample of 4,000 city-days is drawn in the space of PC1, PC2 and PC3 and colored by season. The third axis (9.6% of the variance) adds spread mainly for rainy and windy days and separates the seasons little.</figcaption></figure>
+<h3>City profiles</h3>
+<figure><a href="images/pca_07_city_averages.png"><img src="images/pca_07_city_averages.png" alt="Each city's average position on the first two components"></a><figcaption><b>Each city's average position on the first two components.</b> Every dot is the average of one city's 365 daily scores, colored by region. Los Angeles has the highest average PC1 (2.07) and PC2 (3.67), Anchorage the lowest PC1 (-3.10), and Honolulu, Tucson and Miami the lowest PC2 (-2.40, -2.09 and -2.00).</figcaption></figure>
+<p>Averaged over the year, the cities with the highest PC1 are Los Angeles (2.07), Phoenix (1.83), Riverside (1.68) and Bakersfield (1.06), which are hot, sunny and high in ozone, and the lowest are Anchorage (-3.10), Portland (-1.33), Colorado Springs (-1.22) and Boise (-1.12). On PC2, Los Angeles (3.67), New York (2.38), Detroit (1.37) and Philadelphia (1.26) have the heaviest combustion pollution, whereas Honolulu, Tucson, Miami and Austin are lowest. Los Angeles is the only city that stands out on both axes.</p>
+</section>
+
+<section>
+<h2>Conclusions</h2>
+<p>The 13 daily measurements are far more redundant than they first appear. Three components (71.9% of the variance) are enough to describe the main patterns, and each has a plain meaning: how hot and sunny the day is (with ozone rising with it), how much combustion pollution has built up, and how wet and windy the weather is. Heat and ozone move together, and combustion pollution tends to build up on cool days, so the seasons leave two distinct signatures: summer smog on one axis and winter pollution on the other. Fine particles (PM2.5) load on both axes, which suggests that weather alone will not predict them well.</p>
+<p>The components also line up with air quality categories, so a day's position on just two axes already says a great deal about whether the air is likely to be unhealthy. At the city level, Los Angeles combines both kinds of pollution, desert and Southwest cities are mainly hot and ozone-driven, and cities such as Anchorage and Portland are low on both. For the rest of the project, these results suggest that later models can use a few components or a few carefully chosen variables in place of 13 overlapping ones. PCA is linear and sensitive to extreme days such as the smoke episodes, and the later components (beyond the third) carry small, harder-to-interpret shares of the variation.</p>
 </section>
 
 </main>
