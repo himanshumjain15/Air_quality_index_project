@@ -38,6 +38,8 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - `build_site.py` has been run successfully on the Mac setup. `code/02_clean_eda.py` has NOT been re-run under pandas 3. Do not re-run it until it has been checked for pandas 3 compatibility (it regenerates `data/clean/` and `images/`).
 - Site design copies a classmate's demo (Quarto-style): serif headings, IBM Plex Sans, indigo accent, dropdown nav (Unsupervised, Supervised), dark-mode toggle.
 
+- Canvas rubric (Part 2, all-or-nothing criteria; expect the same pattern later): Website UI = easily accessible tab names; Overview = method and distance metrics (or PCA, eigen, dimensionality) explained with 2+ images and how it is used in the project; Data Prep and code = images of the data frame BEFORE and AFTER transforming, well explained, plus an accessible link to the code (never paste code or code images), in R or Python; Results = explained with images (clustering: dendrogram, cluster images, 3+ k values, silhouette best k, k-means vs hclust comparison; PCA: how to visualize variable-component relationships); Conclusions must be non-technical and tied to the topic.
+
 ## Working conventions
 - Do NOT add a "Co-Authored-By: Claude" trailer to commits. The user had Claude removed from the GitHub contributors list (history was rewritten and force-pushed once).
 - Force-pushes and history rewrites need explicit user approval.

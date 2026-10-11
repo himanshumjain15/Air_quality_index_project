@@ -33,6 +33,28 @@ def save(fig, name):
     plt.close(fig)
 
 
+def before_image(df, label_cols, num_cols, name, title):
+    """Image of the cleaned table BEFORE transforming: label columns (orange) are removed later, values are in original units."""
+    sample = df[label_cols + num_cols].head(7).copy()
+    for c in num_cols:
+        sample[c] = sample[c].round(2)
+    fig, ax = plt.subplots(figsize=(13, 3.2))
+    ax.axis("off")
+    ax.set_title(title, loc="left", fontsize=11, fontweight="bold")
+    t = ax.table(cellText=sample.astype(str).values, colLabels=sample.columns, loc="center", cellLoc="center")
+    t.auto_set_font_size(False)
+    t.set_fontsize(9)
+    t.scale(1, 1.5)
+    for (r, c), cell in t.get_celld().items():
+        is_label = c < len(label_cols)
+        if r == 0:
+            cell.set_facecolor("#c2661d" if is_label else "#4b4fa3")
+            cell.set_text_props(color="white", fontweight="bold")
+        else:
+            cell.set_facecolor("#fdebd3" if is_label else "#ffffff")
+    save(fig, name)
+
+
 df = pd.read_csv(CLEAN / "daily_city_air_weather_clean.csv")
 X = df[FEATURES]
 X.to_csv(CLEAN / "pca_input_numeric.csv", index=False)
@@ -63,11 +85,16 @@ pd.DataFrame(scores[:, :5], columns=[f"PC{i+1}" for i in range(5)]).assign(
     city=df["city"], date=df["date"], season=df["season"], aqi_category=df["aqi_category"]
 ).sample(2000, random_state=SEED).round(4).to_csv(CLEAN / "pca_scores_sample.csv", index=False)
 
+before_image(df, ["city", "date", "season", "aqi_category"],
+             ["pm2_5", "co", "no2", "ozone_max", "temp_mean", "precip_mm", "wind_max"],
+             "pca_01a_data_before.png",
+             "BEFORE: cleaned daily table (orange label columns are removed; numbers are in original units)")
+
 # ------------------------------------------------------------------ sample image (data prep)
 sample = pd.DataFrame(Xs[:7, :10], columns=FEATURES[:10]).round(2)
 fig, ax = plt.subplots(figsize=(13, 3.2))
 ax.axis("off")
-ax.set_title("PCA input: standardized numeric matrix (first 7 rows, first 10 of 13 columns)",
+ax.set_title("AFTER: PCA input, labels removed and every column standardized (first 7 rows, first 10 of 13 columns)",
              loc="left", fontsize=11, fontweight="bold")
 t = ax.table(cellText=sample.astype(str).values, colLabels=sample.columns, loc="center", cellLoc="center")
 t.auto_set_font_size(False)
