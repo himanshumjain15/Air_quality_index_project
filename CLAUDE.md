@@ -46,7 +46,7 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - Never fabricate results; check numbers against the data before writing captions. Say plainly when a result is null or weak.
 
 ## Open items
-- Introduction facts (WHO 7 million deaths, 25 million US asthma cases, 400+ AQI in June 2023) are not yet verified against sources. Two CDC links in the Sources list returned 403 to scripts and were not checked.
+- Introduction facts checked by web search on 2026-10-11: WHO combined air pollution deaths = 6.7 million (2024 fact sheet; old 7 million figure replaced), US asthma ~25 million (CDC 2020 NHIS) OK, NYC AQI on 2023-06-07 was reported above 350 by IQAir (the earlier 400+ claim had no source and was replaced). Two CDC links in the Sources list return 403 to scripts and need a manual browser check.
 - Model tabs NaiveBayes through NN and Conclusions are placeholders to fill in as each part comes due. Introduction now has 5 paragraphs and 3 images (still to be fact-checked).
 - Submission each part: a .docx named with the student's name and the project part, containing only the site URL, uploaded to Canvas.
 - Student: Himanshu Jain, MS Data Science, CU Boulder. Machine moved from Windows to a new Mac (setup confirmed working).
