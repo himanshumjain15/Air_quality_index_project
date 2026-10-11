@@ -11,7 +11,7 @@ Live site: https://himanshumjain15.github.io/Air_quality_index_project/
 - Every model tab needs: Overview, DATA (small image of the prepared data plus links to raw and clean data), CODE (link and note language/packages; do not paste code), RESULTS.
 - Figures need a title, labels, color, and two sentences of caption. Link all code and all raw data.
 - Topic must not be stock-market prediction.
-- Parts: 1 = topic, data, cleaning, EDA (done). 2 = clustering and PCA. 3 = Naive Bayes and decision trees. 4 = SVMs (multiple kernels). 5 = linear regression, neural networks, final Introduction and Conclusions.
+- Parts: 1 = topic, data, cleaning, EDA (done). 2 = clustering and PCA (done, on branch `part2-clustering-pca`, awaiting the user's push). 3 = Naive Bayes and decision trees. 4 = SVMs (multiple kernels). 5 = linear regression, neural networks, final Introduction and Conclusions.
 
 ## Topic and data
 Question: how do weather and season shape daily air quality in large US cities, and how does air quality relate to asthma and COPD?
@@ -30,6 +30,8 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - `code/01_gather_data.py` pulls raw data into `data/raw/` (about 10 minutes, needs internet).
 - `code/02_clean_eda.py` cleans data and writes `data/clean/` and `images/` (16 EDA figures plus raw/clean previews).
 - `code/03_intro_image.py` makes the AQI scale image.
+- `code/04_clustering.py` (Part 2): k-means k=2..10 plus hierarchical (cosine distance, average linkage) on 50 cities x 20 numeric features; writes `data/clean/clustering_*.csv|json`, `city_clusters.csv` and `images/cluster_*.png`.
+- `code/05_pca.py` (Part 2): PCA on 20,075 city-days x 13 numeric features with an SVD check; writes `data/clean/pca_*.csv|json` and `images/pca_*.png`.
 - `code/build_site.py` generates every HTML page and `style.css` in the repo root. HTML files are generated: edit `build_site.py`, then run it. Do not hand-edit the HTML.
 - Mac setup: virtual environment at `.venv` in the repo root, Python 3.14.8. Create with `python3 -m venv .venv`, then `.venv/bin/pip install -r requirements.txt`. Preview with `.venv/bin/python -m http.server 8765` from the repo root.
 - `requirements.txt` pins the versions installed in `.venv`: pandas 3.0.6, numpy 2.5.4, matplotlib 3.11.2, seaborn 0.13.2, requests 2.34.2, scikit-learn 1.9.1. The Windows setup used pandas 2.3.3, numpy 2.2.6, matplotlib 3.10.8, requests 2.32.5, scikit-learn 1.7.2.
@@ -39,10 +41,12 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 ## Working conventions
 - Do NOT add a "Co-Authored-By: Claude" trailer to commits. The user had Claude removed from the GitHub contributors list (history was rewritten and force-pushed once).
 - Force-pushes and history rewrites need explicit user approval.
+- NEVER push to GitHub. Commit on a feature branch and let the user push and open the PR. No Claude trailer, and the git identity is himanshumjain15 <himanshumjain15@gmail.com> (set in repo-local config).
+- Part 2 findings: silhouette favors k=2 for both methods (k-means 0.214, hclust-cosine 0.375) but all scores are weak; k=4 used for interpretation. Highest-PM2.5 metros (LA, NYC, Chicago...) have low COPD/smoking; heartland/Deep South cluster has the highest COPD, smoking, obesity. PCA: PC1 35.2% warm/sunny/ozone, PC2 27.1% combustion pollution, PC3 9.6% wet/windy; 3 PCs = 71.9%, 80% needs 5.
 - Never fabricate results; check numbers against the data before writing captions. Say plainly when a result is null or weak.
 
 ## Open items
 - Introduction facts (WHO 7 million deaths, 25 million US asthma cases, 400+ AQI in June 2023) are not yet verified against sources. Two CDC links in the Sources list returned 403 to scripts and were not checked.
-- Model tabs (Clustering through NN), Conclusions and the 5-paragraph Introduction are placeholders to fill in as each part comes due.
+- Model tabs NaiveBayes through NN and Conclusions are placeholders to fill in as each part comes due. Introduction now has 5 paragraphs and 3 images (still to be fact-checked).
 - Submission each part: a .docx named with the student's name and the project part, containing only the site URL, uploaded to Canvas.
 - Student: Himanshu Jain, MS Data Science, CU Boulder. Machine moved from Windows to a new Mac (setup confirmed working).
