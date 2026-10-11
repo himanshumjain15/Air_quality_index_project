@@ -1,0 +1,51 @@
+city,state,region,asthma_level,pm_level,kmeans_cluster,hclust_cluster,pm2_5_mean
+Albuquerque,NM,West,Low,Low,0,3,7.37
+Anchorage,AK,West,High,Low,1,1,5.87
+Atlanta,GA,South,Low,High,3,0,12.57
+Austin,TX,South,Low,Low,1,1,8.57
+Bakersfield,CA,West,High,Medium,0,3,10.86
+Birmingham,AL,South,Low,High,2,2,11.73
+Boise,ID,West,High,Low,1,1,7.19
+Boston,MA,Northeast,High,High,1,0,11.53
+Boulder,CO,West,High,Low,1,0,8.79
+Charlotte,NC,South,High,High,3,0,12.38
+Chicago,IL,Midwest,Low,High,3,0,13.5
+Cincinnati,OH,Midwest,High,High,2,2,11.72
+Cleveland,OH,Midwest,High,Medium,2,2,11.01
+Colorado Springs,CO,West,High,Low,1,1,6.42
+Columbus,OH,Midwest,High,Medium,2,2,10.66
+Dallas,TX,South,Low,High,0,3,11.48
+Denver,CO,West,High,Medium,1,0,9.9
+Detroit,MI,Midwest,High,High,2,2,13.08
+El Paso,TX,South,Low,Low,0,3,8.49
+Fresno,CA,West,Low,Medium,0,3,10.77
+Honolulu,HI,West,Low,Low,0,1,7.76
+Houston,TX,South,Low,High,0,3,11.64
+Indianapolis,IN,Midwest,High,Medium,2,2,10.45
+Jacksonville,FL,South,High,Medium,0,2,10.4
+Kansas City,MO,Midwest,High,Medium,2,2,10.54
+Las Vegas,NV,West,Low,Low,0,3,7.88
+Los Angeles,CA,West,Low,High,3,0,19.17
+Memphis,TN,South,High,Medium,2,2,10.45
+Miami,FL,South,Low,Medium,0,3,10.29
+Milwaukee,WI,Midwest,High,Medium,2,2,11.29
+Minneapolis,MN,Midwest,Low,High,1,0,11.95
+Nashville,TN,South,High,Medium,2,2,10.47
+New Orleans,LA,South,High,Medium,2,2,10.98
+New York,NY,Northeast,Low,High,3,0,16.36
+Oklahoma City,OK,South,High,Low,2,2,8.62
+Omaha,NE,Midwest,Low,Medium,0,1,10.22
+Phoenix,AZ,West,Low,Medium,3,3,11.47
+Portland,OR,West,High,Low,1,1,7.95
+Raleigh,NC,South,Low,High,1,0,11.75
+Riverside,CA,West,Low,High,3,3,12.33
+Sacramento,CA,West,High,Low,1,1,9.33
+Salt Lake City,UT,West,High,High,1,0,12.0
+San Antonio,TX,South,Low,Low,0,3,8.42
+San Diego,CA,West,Low,High,3,0,15.16
+San Francisco,CA,West,Low,Medium,1,1,10.9
+San Jose,CA,West,Low,Low,1,1,8.15
+Seattle,WA,West,Low,Low,1,0,9.9
+Tampa,FL,South,Low,Low,0,3,9.05
+Tucson,AZ,West,High,Low,0,3,5.0
+Washington,DC,South,High,High,3,0,13.28
