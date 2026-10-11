@@ -31,7 +31,9 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - `code/02_clean_eda.py` cleans data and writes `data/clean/` and `images/` (16 EDA figures plus raw/clean previews).
 - `code/03_intro_image.py` makes the AQI scale image.
 - `code/build_site.py` generates every HTML page and `style.css` in the repo root. HTML files are generated: edit `build_site.py`, then run it. Do not hand-edit the HTML.
-- Python 3.10+, `pip install -r requirements.txt`. Preview with `python -m http.server 8765` from the repo root.
+- Mac setup: virtual environment at `.venv` in the repo root, Python 3.14.8. Create with `python3 -m venv .venv`, then `.venv/bin/pip install -r requirements.txt`. Preview with `.venv/bin/python -m http.server 8765` from the repo root.
+- `requirements.txt` pins the versions installed in `.venv`: pandas 3.0.6, numpy 2.5.4, matplotlib 3.11.2, seaborn 0.13.2, requests 2.34.2, scikit-learn 1.9.1. The Windows setup used pandas 2.3.3, numpy 2.2.6, matplotlib 3.10.8, requests 2.32.5, scikit-learn 1.7.2.
+- `build_site.py` has been run successfully on the Mac setup. `code/02_clean_eda.py` has NOT been re-run under pandas 3. Do not re-run it until it has been checked for pandas 3 compatibility (it regenerates `data/clean/` and `images/`).
 - Site design copies a classmate's demo (Quarto-style): serif headings, IBM Plex Sans, indigo accent, dropdown nav (Unsupervised, Supervised), dark-mode toggle.
 
 ## Working conventions
@@ -43,4 +45,4 @@ Median daily PM2.5 9.3; 17% of city-days above the WHO 15 guideline. Los Angeles
 - Introduction facts (WHO 7 million deaths, 25 million US asthma cases, 400+ AQI in June 2023) are not yet verified against sources. Two CDC links in the Sources list returned 403 to scripts and were not checked.
 - Model tabs (Clustering through NN), Conclusions and the 5-paragraph Introduction are placeholders to fill in as each part comes due.
 - Submission each part: a .docx named with the student's name and the project part, containing only the site URL, uploaded to Canvas.
-- Student: Himanshu Jain, MS Data Science, CU Boulder. Machine moved from Windows to a new Mac.
+- Student: Himanshu Jain, MS Data Science, CU Boulder. Machine moved from Windows to a new Mac (setup confirmed working).
