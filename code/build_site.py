@@ -58,7 +58,7 @@ a{color:var(--brand)}
 ul.cover li,ol li{margin:.3rem 0}
 figure{margin:24px 0;text-align:center}
 figure img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
-figure.small img{max-width:640px}
+figure.small img{max-width:min(640px,100%)}
 figcaption{font-size:.92rem;color:var(--muted);margin:9px auto 0;text-align:left}
 figcaption b{color:var(--ink)}
 table{border-collapse:collapse;width:100%;font-size:.92rem;margin:.8rem 0;display:block;overflow-x:auto}
@@ -74,6 +74,8 @@ pre code{background:none;padding:0;word-break:normal}
 .start a:hover{border-color:var(--brand)}
 .start a b{display:block;color:var(--brand)}
 .start a span{font-size:.88rem;color:var(--muted)}
+.figrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.figrow figure{margin:12px 0}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:.8rem}
 .card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--card)}
 .card b{display:block;font-family:"Source Serif 4",Georgia,serif;font-size:1.05rem}
@@ -82,7 +84,7 @@ pre code{background:none;padding:0;word-break:normal}
 .card .tags{margin:.7rem 0 0;display:flex;flex-wrap:wrap;gap:6px}
 .card .tags em{font-style:normal;font-size:.78rem;background:var(--soft);color:var(--brand);border-radius:999px;padding:2px 10px}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;text-align:center;padding:22px}
-@media(max-width:760px){.stats,.start{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr}nav.top .in{flex-wrap:wrap;padding:6px 14px}nav.top .dd{position:static;box-shadow:none}h1{font-size:1.7rem}main{padding-top:28px}}
+@media(max-width:760px){.figrow{grid-template-columns:minmax(0,1fr)}.stats,.start{grid-template-columns:1fr 1fr}.cards{grid-template-columns:1fr}nav.top .in{flex-wrap:wrap;padding:6px 14px}nav.top .dd{position:static;box-shadow:none}h1{font-size:1.7rem}main{padding-top:28px}}
 """
 
 THEME_JS = "(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();"
@@ -177,6 +179,11 @@ intro = f"""
 
 {fig("eda_13_pm25_map.png", "Air quality differs from place to place",
      "Cities on the California coast and along the Northeast corridor tend to have the dirtiest air, while the interior Southwest and the Mountain West tend to have the cleanest. Each dot is one large city, so the map hints that places may sort into recognizable types.")}
+
+<p>Warning people before the air turns unhealthy is only possible if the conditions that lead to bad air days are understood. Air quality forecasts are issued daily by government agencies, and in many places they trigger action days on which residents are urged to limit driving, avoid burning wood, and postpone strenuous outdoor activity. Families who manage asthma often rely on such forecasts to decide whether children should play outside or carry rescue inhalers, and many schools plan recess around the daily color or flag. A useful warning must arrive early and must be right often enough that people keep trusting it. Too many false alarms lead to warning fatigue, while missed events leave the most vulnerable people exposed. Weather is the natural starting point for anticipating the air, because temperature, sunshine, wind, and season are known ahead of time far better than traffic or industrial activity, and because they decide whether pollution builds up or blows away. Yet weather is clearly not the whole story. Two cities with identical weather can have very different air because of their geography, their traffic, their industries, and the smoke that arrives from fires far away. The seasons add another layer, since summer brings the sunshine and heat that favor smog, while autumn tends to bring the cleanest air of the year. Unusual events such as wildfire smoke can overwhelm every ordinary pattern for days at a time. Understanding how far everyday conditions can anticipate the state of the air, and where they fall short, helps public health officials decide when simple rules of thumb are enough and when more monitoring is worth the cost. It also tells the public how much confidence to place in a warning that rests on the weather outlook alone.</p>
+
+{fig("eda_15_season_region.png", "Air quality follows the seasons",
+     "Average fine-particle levels are lowest in fall in all four regions and highest in summer in three of them, while the West peaks in winter instead. The pattern differs by region, which is one reason a single rule for every city rarely works.")}
 </section>
 
 <section>
@@ -560,14 +567,246 @@ pca_page = f"""
 
 page("pca.html", "PCA", pca_page)
 
+# ============================================================================ NAIVE BAYES AND DECISION TREES TABS (Module 3)
+NR = json.loads((ROOT / "data" / "clean" / "nb_dt_results.json").read_text(encoding="utf-8"))
+CODE06 = f"{GH}/blob/main/code/06_naive_bayes_trees.py"
+
+
+def pc(x, d=1):
+    return f"{x * 100:.{d}f}%"
+
+
+BASE = NR["baseline_accuracy_test"]
+LC, SP = NR["label_counts"], NR["split"]
+NBM = NR["nb"]["Multinomial NB (binned values)"]
+NBS = NR["nb"]["Multinomial NB (scaled values)"]
+NBB = NR["nb"]["Bernoulli NB (binned values)"]
+NBG = NR["nb"]["Gaussian NB (raw values)"]
+DT = NR["dt"]
+T1, T2, T3 = (DT["Tree 1: Gini, depth 3, weather"], DT["Tree 2: Entropy, depth 3, weather"],
+              DT["Tree 3: Gini, depth 4, weather + location"])
+TW, TL = DT[NR["dt_names"]["tuned_weather"]], DT[NR["dt_names"]["tuned_location"]]
+SE = NR["split_example"]
+MOD_SHARES = [sum(r[1] for r in t['confusion']) / sum(map(sum, t['confusion'])) * 100 for t in (T1, T2, T3)]
+MOD_LO, MOD_HI = round(min(MOD_SHARES)), round(max(MOD_SHARES))
+NBT, DTT, DTTT = NR["nb_time_holdout"], NR["dt_time_holdout"], NR["dt_time_holdout_tuned"]
+NBL = NR["nb_location"]
+THR = NR["time_holdout_rows"]
+IMPW, IMPL = TW["importance"], TL["importance"]
+TEMP_SUM = IMPW["temp_mean"] + IMPW["temp_max"] + IMPW["temp_min"]
+
+
+def nb_row(name, r):
+    return (f"<tr><td>{name}</td><td>{pc(r['accuracy'])}</td><td>{r['macro_f1']:.2f}</td>"
+            f"<td>{pc(r['recall']['Good'], 0)}</td><td>{pc(r['recall']['Moderate'], 0)}</td>"
+            f"<td>{pc(r['recall']['Unhealthy'], 0)}</td><td>{pc(r['precision']['Unhealthy'], 0)}</td></tr>")
+
+
+NB_TABLE = ("<table><tr><th>Variant</th><th>Accuracy</th><th>Macro-F1</th><th>Recall: Good</th><th>Recall: Moderate</th>"
+            "<th>Recall: Unhealthy</th><th>Precision: Unhealthy</th></tr>"
+            f"<tr><td><i>Always predict Moderate (baseline)</i></td><td>{pc(BASE)}</td><td>0.25</td><td>0%</td><td>100%</td><td>0%</td><td>-</td></tr>"
+            + nb_row("Multinomial, scaled values", NBS) + nb_row("Multinomial, binned values", NBM)
+            + nb_row("Bernoulli, binned values", NBB) + nb_row("Gaussian, raw values", NBG) + "</table>")
+
+
+def dt_row(name, r):
+    return (f"<tr><td>{name}</td><td>{r['criterion']}</td><td>{r['depth']}</td><td>{r['leaves']}</td>"
+            f"<td>{pc(r['train_accuracy'])}</td><td>{pc(r['accuracy'])}</td><td>{r['macro_f1']:.2f}</td>"
+            f"<td>{pc(r['recall']['Unhealthy'], 0)}</td></tr>")
+
+
+DT_TABLE = ("<table><tr><th>Tree</th><th>Criterion</th><th>Depth</th><th>Leaves</th><th>Training accuracy</th>"
+            "<th>Testing accuracy</th><th>Macro-F1</th><th>Recall: Unhealthy</th></tr>"
+            f"<tr><td><i>Always predict Moderate (baseline)</i></td><td>-</td><td>0</td><td>1</td><td>{pc(LC['Moderate'] / NR['n_rows'])}</td><td>{pc(BASE)}</td><td>0.25</td><td>0%</td></tr>"
+            + dt_row("Tree 1: weather", T1) + dt_row("Tree 2: weather", T2) + dt_row("Tree 3: weather + location", T3)
+            + dt_row("Tuned: weather", TW) + dt_row("Tuned: weather + location", TL) + "</table>")
+
+DATA_LINKS = f"""<ul>
+<li><a href="{CLEANLINK}nb_dt_labeled_dataset.csv">nb_dt_labeled_dataset.csv</a>: the full labeled sample ({NR['n_rows']:,} city-days, weather features plus the label)</li>
+<li><a href="{CLEANLINK}daily_city_air_weather_clean.csv">daily_city_air_weather_clean.csv</a>: the cleaned daily table the sample comes from</li>
+<li>Raw data: <a href="{RAWLINK}openmeteo_weather_daily_raw.csv">daily weather</a>, <a href="{RAWLINK}openmeteo_air_quality_hourly_raw.csv">hourly air quality</a> (the AQI that defines the label) and <a href="{RAWLINK}cities_reference.csv">city locations</a></li>
+</ul>"""
+
+SPLIT_TEXT = f"""<p>A supervised method needs <b>labeled data</b>: every row must come with the correct answer so that the method can learn from it and be graded against it. Only rows with a known label can be used, and here every one of the {NR['n_rows']:,} city-days has one. The label is the AQI group of the day. The cleaned table already contained the official EPA category of each day (computed from the pollutant readings in Part 1), and the four upper categories were merged into three groups because Unhealthy (293 days) and Very Unhealthy (71 days) are too rare to learn on their own and no Hazardous day occurred: <b>Good</b> ({LC['Good']:,} days, {pc(NR['label_share']['Good'])}), <b>Moderate</b> ({LC['Moderate']:,} days, {pc(NR['label_share']['Moderate'])}) and <b>Unhealthy</b> ({LC['Unhealthy']:,} days, {pc(NR['label_share']['Unhealthy'])}), the last meaning an AQI of 101 or more (unhealthy for sensitive groups or worse).</p>
+<p>The inputs are the daily weather: mean, maximum and minimum temperature, precipitation, maximum wind speed, solar radiation, and the month of the year. <b>No pollutant column is used</b>, because the label is computed from pollutant readings, so including them would hand the answer to the method. The city is also left out, which keeps the question the one asked in the Introduction: can the air quality group be forecast from the weather alone? A second experiment adds each city's latitude and longitude to test how much location contributes.</p>
+{fig("nb_01_labeled_sample.png", "A sample of the labeled data",
+     "Each row is one city on one day, with the weather inputs on the left and the answer on the right (orange columns). Only the label column and the weather columns are used by the methods, and the city and date are kept only to identify rows.")}
+<h3>Training set and testing set</h3>
+<p>The labeled rows were split at random into a <b>training set</b> (80%, {SP['train_rows']:,} rows), which the method uses to learn, and a <b>testing set</b> (20%, {SP['test_rows']:,} rows), which is kept aside and used only once, to measure how well the learned rules work on days it has never seen. The split was <b>stratified</b>, which means that each set has the same share of Good, Moderate and Unhealthy days as the whole sample, and the random seed was fixed (42) so the split can be reproduced. The two sets must be <b>disjoint</b>, with no row in both. If a day were in both sets, the method could simply memorize it and the test would measure memory, not the ability to predict new days, so accuracy would look better than it really is. Every row carries an identifier (<code>row_id</code>), and the code confirms that the two sets share <b>{SP['overlap_rows']} rows</b>.</p>
+<div class="figrow">
+{fig("nb_02_train_sample.png", "Training set", f"The first rows of the {SP['train_rows']:,}-day training set, used to learn the rules.", True)}
+{fig("nb_03_test_sample.png", "Testing set", f"The first rows of the {SP['test_rows']:,}-day testing set, used only to grade the learned rules.", True)}
+</div>
+{fig("nb_05_split_balance.png", "Both sets have the same label proportions",
+     "Stratified sampling keeps about 30% Good, 61% Moderate and 9% Unhealthy days in both sets. The shares differ by less than 0.1 percentage points between the training and testing sets.", True)}
+<p>One caution applies to any random split of daily data: days next to each other, and days from the same city, resemble each other, so a random split can be slightly optimistic. A harder check is reported in the Results section, where the rules are learned from January to September and tested on October to December.</p>"""
+
+# ---------------------------------------------------------------- NAIVE BAYES PAGE
+naivebayes = f"""
+<h1>NaiveBayes</h1>
+<p class="sub">Can the air quality group of a day be guessed from the weather with simple probabilities?</p>
+<p>This tab applies Naive Bayes to the labeled city-days to predict whether a day will be Good, Moderate or Unhealthy from that day's weather. It is organized into Overview, Data Prep, Code, Results and Conclusions.</p>
+
+<section>
+<h2>Overview</h2>
+<p><b>Naive Bayes</b> is a supervised classifier: it learns from days whose answer is already known and then assigns a group to days it has not seen. It is built on Bayes' theorem, which turns the question "how likely is this weather on an Unhealthy day?" into the question that matters, "how likely is an Unhealthy day, given this weather?". For a day with weather features x1, x2, ..., xn, the score of group c is proportional to P(c) &times; P(x1 | c) &times; P(x2 | c) &times; ... &times; P(xn | c). The first term, the <b>prior</b>, is how common the group is overall. The other terms are <b>likelihoods</b>, estimated by counting how often each weather condition occurred on days of that group in the training data. The group with the highest score is the prediction.</p>
+<p>The method is called <b>naive</b> because it multiplies the likelihoods as if the features were unrelated once the group is known. That is rarely exactly true (here, mean, maximum and minimum temperature move together almost perfectly), yet Naive Bayes often classifies well because only the ranking of the groups matters, not the exact probabilities. It is very fast, works with little data and many features, and is a classic choice for spam filtering, document and sentiment classification, and medical screening. A small <b>smoothing</b> count (alpha = 1, called Laplace smoothing) is added to every count so that a condition never seen in a group does not force its probability to zero.</p>
+{fig("nb_00a_ingredients.png", "The ingredients of Naive Bayes",
+     "The left panel is the prior (how common each group is among training days), and the other two panels are likelihoods (how solar radiation and temperature are distributed within each group). Unhealthy days (red) cluster at high sunshine and heat, which is exactly the kind of evidence Naive Bayes multiplies together.")}
+<h3>Multinomial, Bernoulli and Gaussian Naive Bayes</h3>
+<p>The versions differ in how they model the features. <b>Multinomial Naive Bayes</b> (the standard version used in class) treats each feature as a <i>count</i> or frequency of an event, as in the number of times each word appears in a document. The likelihood of feature i in group c is (count of i among days of group c + alpha) divided by (total count in group c + alpha &times; number of features), so every feature must be a non-negative number. <b>Bernoulli Naive Bayes</b> instead treats every feature as a yes/no question: the feature is present (1) or absent (0). Its likelihood is the share of days in the group on which the feature is present, and, unlike the multinomial version, it also uses <i>absence</i> as evidence, because a 0 contributes the probability that the feature is not present. It suits short texts and binary indicators. A third version, <b>Gaussian Naive Bayes</b>, models each continuous measurement within a group with a normal curve and is included here as a comparison.</p>
+{fig("nb_00b_multinomial_vs_bernoulli.png", "One day as bin columns: how the two versions read it",
+     f"A real day ({NR['example_row']['city']}, {NR['example_row']['date']}) is shown as 0/1 bin columns, with each filled cell marking the range its weather value falls in. Multinomial Naive Bayes counts only the bins that occur, while Bernoulli Naive Bayes also uses the bins that do not occur.", True)}
+<h3>What is done with it here</h3>
+<p>The Introduction asked whether an air quality group can be forecast from weather alone. Naive Bayes is used to answer this as a first, simple attempt: the probabilities of each weather condition within Good, Moderate and Unhealthy days are learned from the training set and used to classify the testing set. Four versions are compared (multinomial on scaled values, multinomial on binned values, Bernoulli and Gaussian), and results are judged with accuracy, a majority-class baseline, and the confusion matrix. <b>Recall</b> (the share of days of a group that were found) and <b>precision</b> (the share of days predicted as a group that really belonged to it) are reported for each group, and <b>macro-F1</b> averages the balance of precision and recall over the three groups, so a method that ignores a rare group scores low even if its accuracy looks high.</p>
+</section>
+
+<section>
+<h2>Data Prep</h2>
+{SPLIT_TEXT}
+<h3>Preparing the numbers for Multinomial Naive Bayes</h3>
+<p>Multinomial Naive Bayes in Python (<code>scikit-learn</code>) accepts only <b>numeric, non-negative</b> input. The weather columns are numeric, but temperatures drop below zero in winter, so they cannot be used directly. Two preparations were tested. First, every column was <b>scaled</b> to the range 0 to 1 using the training set only. Second, every column was <b>binned</b> into five groups of equal size (quantile bins, learned from the training set) and each day was recorded as a set of 0/1 columns, one per bin, giving {NR['nb_binned_columns']} columns (precipitation has only three bins, because more than half of all days are dry). The binned version is the closest match to how multinomial Naive Bayes is normally used, because each 1 marks an event that occurred. The scaled version is kept in the comparison because it shows what goes wrong without this step.</p>
+{fig("nb_04_binned_sample.png", "After preparation: weather turned into 0/1 bin columns",
+     "Each day now has exactly one 1 per weather variable, in the column for the range that its value falls in (only two of the seven variables are shown). The label on the right is not an input; it is the answer used for training and grading.")}
+{DATA_LINKS}
+<ul>
+<li><a href="{CLEANLINK}nb_train_binned.csv">nb_train_binned.csv</a> and <a href="{CLEANLINK}nb_test_binned.csv">nb_test_binned.csv</a>: the prepared training and testing sets (0/1 bin columns plus label and <code>row_id</code>)</li>
+</ul>
+</section>
+
+<section>
+<h2>Code</h2>
+<p>The analysis is written in <b>Python</b> with <code>pandas</code>, <code>numpy</code>, <code>scikit-learn</code> (<code>MultinomialNB</code>, <code>BernoulliNB</code>, <code>GaussianNB</code>, <code>KBinsDiscretizer</code>, <code>MinMaxScaler</code>, <code>train_test_split</code>), <code>matplotlib</code> and <code>seaborn</code>.</p>
+<ul>
+<li><a href="{CODE06}"><code>06_naive_bayes_trees.py</code></a> on GitHub: creates the labels, splits the data, prepares the features, fits all Naive Bayes variants and draws every figure on this tab (the same script also produces the Decision Trees tab)</li>
+<li><a href="{CLEANLINK}nb_dt_results.json">nb_dt_results.json</a>: every number quoted on this tab</li>
+</ul>
+</section>
+
+<section>
+<h2>Results</h2>
+<p>All results are measured on the <b>testing set</b> ({SP['test_rows']:,} days that were never used for learning). The most important reference is a method that ignores the weather and always answers the most common group, Moderate, which is correct on <b>{pc(BASE)}</b> of days. Smoothing was alpha = 1 and the binned versions used five quantile bins; the class priors were learned from the training set ({pc(NR['label_share']['Good'], 0)} Good, {pc(NR['label_share']['Moderate'], 0)} Moderate, {pc(NR['label_share']['Unhealthy'], 0)} Unhealthy).</p>
+{NB_TABLE}
+{fig("nb_06_confusion_matrices.png", "Confusion matrices of the four Naive Bayes versions",
+     "Rows are the true group and columns are the predicted group, so the diagonal holds the correct answers. The scaled multinomial version (far left) predicts Moderate for every day, while the binned and Gaussian versions spread their predictions over all three groups and find most of the Unhealthy days.")}
+<p><b>Scaled values fail in an instructive way.</b> The multinomial version on scaled values reaches {pc(NBS['accuracy'])} accuracy, equal to the baseline, but its confusion matrix shows that it predicts Moderate for all {SP['test_rows']:,} days, so it never finds a Good or Unhealthy day (macro-F1 {NBS['macro_f1']:.2f}). Values between 0 and 1 are not counts, so the Moderate prior dominates every decision.</p>
+<p><b>Binned values give a working classifier, but with lower accuracy.</b> Multinomial Naive Bayes on binned values has an accuracy of {pc(NBM['accuracy'])}, below the baseline, but a macro-F1 of {NBM['macro_f1']:.2f} against {NBS['macro_f1']:.2f}. It finds {pc(NBM['recall']['Unhealthy'], 0)} of the Unhealthy days ({round(NBM['recall']['Unhealthy'] * 372)} of 372) and {pc(NBM['recall']['Good'], 0)} of the Good days. The price is a large number of false alarms: only {pc(NBM['precision']['Unhealthy'], 0)} of the days it labels Unhealthy really were, so about seven of every ten warnings would be wrong. Bernoulli Naive Bayes gives almost the same result ({pc(NBB['accuracy'])} accuracy, macro-F1 {NBB['macro_f1']:.2f}), which is expected because the inputs are binary, and Gaussian Naive Bayes on raw values finds the most Unhealthy days ({pc(NBG['recall']['Unhealthy'], 0)}) at the lowest accuracy ({pc(NBG['accuracy'])}).</p>
+{fig("nb_07_metrics_comparison.png", "Accuracy versus macro-F1 for each version",
+     "Accuracy (blue) rewards the version that always answers Moderate, while macro-F1 (orange) rewards the versions that tell the groups apart. The dashed line is the accuracy of always predicting Moderate.", True)}
+<h3>What the classifier learned</h3>
+{fig("nb_08_top_bins.png", "Weather conditions that most separate Unhealthy days from Good days",
+     "Bars to the right (red) are conditions much more common on Unhealthy days than on Good days, and bars to the left (blue) are conditions much more common on Good days. Hot, sunny days from May to July (the month bin 5.0 to 8.0) point to Unhealthy air, while cold, dim days from October to December (bin 10.0 to 12.0) point strongly to Good air.", True)}
+<p>The strongest evidence for an Unhealthy day is a maximum temperature of 29.9 C or more, solar radiation of 24.6 MJ per square meter or more, and the months May to July. The strongest evidence for a Good day is the months October to December, followed by cold days (maximum temperature below 11.9 C) with little sunshine. This matches the chemistry of smog described in the Introduction.</p>
+<h3>Two robustness checks</h3>
+<ul>
+<li><b>Adding location.</b> With each city's latitude and longitude binned and added as inputs, multinomial Naive Bayes reaches {pc(NBL['accuracy'])} accuracy and macro-F1 {NBL['macro_f1']:.2f}, only a small improvement (from {pc(NBM['accuracy'])} and {NBM['macro_f1']:.2f}). Naive Bayes cannot combine location and weather in a flexible way, because it treats them as independent.</li>
+<li><b>Learning from January to September and testing on October to December</b> ({THR['train']:,} training days, {THR['test']:,} testing days). Accuracy is {pc(NBT['accuracy'])} against a baseline of {pc(NBT['baseline_accuracy'])} for that period, which is a clearer gain over guessing, but only {pc(NBT['recall']['Unhealthy'], 0)} of the Unhealthy days are found, because very few Unhealthy days occur in autumn at all. The baseline differs from the main experiment because the mix of groups changes with the season, so these accuracies should be compared with their own baselines and not with each other.</li>
+</ul>
+</section>
+
+<section>
+<h2>Conclusions</h2>
+<p><b>Weather alone is a weak forecaster of the daily air quality group.</b> Every Naive Bayes version that actually tells the groups apart has an accuracy ({pc(NBG['accuracy'])} to {pc(NBB['accuracy'])}) below the {pc(BASE)} obtained by always answering Moderate, so on accuracy alone the classifier adds nothing. What it adds is sensitivity: it finds about seven in ten Unhealthy days, which the baseline never does, at the cost of many false alarms. For a public health warning, where a missed Unhealthy day is usually worse than an unnecessary caution, that trade can be reasonable, but a warning that is wrong seven times in ten would soon be ignored.</p>
+<p><b>The learned evidence agrees with the science.</b> Heat, strong sunshine and the summer months raise the probability of an Unhealthy day, and the cool, dim days of late autumn almost guarantee good air. This answers the part of the Introduction's tenth question about which conditions are the best warning signs: high temperature and solar radiation in the warm months.</p>
+<p><b>Limits.</b> The independence assumption is clearly violated, because the three temperature columns are nearly copies of each other and are counted as separate evidence. The AQI values come from an atmospheric model on a coarse grid, one year of data was used, and neighboring days are similar, so the random split is somewhat optimistic. Unusual events such as the June 2023 smoke cannot be anticipated from local weather at all. The next method, decision trees, can combine conditions (for example heat <i>and</i> calm winds) and is tested on the same data and split.</p>
+</section>
+"""
+page("naivebayes.html", "NaiveBayes", naivebayes)
+
+# ---------------------------------------------------------------- DECISION TREES PAGE
+SEP, SEL, SER = SE["parent"], SE["left"], SE["right"]
+pp = [c / SEP["n"] for c in SEP["counts"]]
+dectrees = f"""
+<h1>DecTrees</h1>
+<p class="sub">Which weather rules best separate clean days from unhealthy ones?</p>
+<p>This tab applies decision trees to the same labeled city-days and the same training and testing sets as the Naive Bayes tab, so the two methods can be compared fairly. It is organized into Overview, Data Prep, Code, Results and Conclusions.</p>
+
+<section>
+<h2>Overview</h2>
+<p>A <b>decision tree</b> is a flowchart of yes/no questions about the inputs. A day enters at the top (the <b>root node</b>), is sent left or right depending on the answer to a question such as "is the month October or later?", meets another question in an <b>internal (decision) node</b>, and finally lands in a <b>leaf node</b>, which holds the prediction (the most common group among the training days that ended up there). Trees are popular because the finished model can be read, explained and drawn, they need no scaling of the inputs, they handle numbers and categories, and they capture <b>interactions</b>, such as "hot <i>and</i> calm". They are used for medical diagnosis, credit decisions, customer behavior, and many other classification tasks (a variant predicts numbers instead of groups).</p>
+{fig("dt_00a_tree_anatomy.png", "The anatomy of a decision tree (a real tree of depth 2 from this project's training data)",
+     "Each box shows its question, its impurity (gini) and how many training days reached it. The root asks the first question, internal nodes ask further questions, and leaves stop and predict the most common group, shown in the colour of that group.")}
+<h3>How a tree chooses its questions: Gini, entropy and information gain</h3>
+<p>A tree is grown from the top. At every node, the algorithm tries every input and every possible cut point and keeps the question that makes the two resulting groups as <b>pure</b> as possible, meaning each group is dominated by a single AQI group. To compare questions, purity needs a number, and two standard measures are used. <b>Gini impurity</b> is 1 - (p1&sup2; + p2&sup2; + ... + pk&sup2;), where pi is the share of days in the node that belong to group i. <b>Entropy</b> is -(p1 log2 p1 + p2 log2 p2 + ... + pk log2 pk), measured in bits. Both are 0 for a node that holds only one group and largest when the groups are mixed in equal shares (for two groups the maximum is 0.5 for Gini and 1 bit for entropy). They are used because they turn "how mixed is this node?" into a number that can be compared across candidate questions. Gini is slightly cheaper to compute, while entropy punishes mixed nodes slightly more, and they usually select similar trees.</p>
+<p>The quality of a question is its <b>gain</b>: the impurity of the parent node minus the weighted average impurity of the two child nodes, where each child is weighted by the share of days it receives. When entropy is the impurity, this gain is called <b>information gain</b>, and with Gini it is the Gini decrease. The question with the largest gain is chosen, the process repeats inside each child, and it stops when a node is pure, too small, or a depth limit is reached.</p>
+{fig("dt_00b_impurity_curves.png", "Gini and entropy for a node with two groups",
+     "Both curves are zero when the node contains only one group (left and right edges) and peak when the two groups are equally mixed (center). The shapes are similar, which is why the two criteria usually pick similar splits.", True)}
+<h3>A worked example from the training data</h3>
+<p>Take the root question chosen by the Gini tree, "is the month at most {SE['threshold']:.1f}" (that is, January to September). The {SEP['n']:,} training days contain {SEP['counts'][0]:,} Good, {SEP['counts'][1]:,} Moderate and {SEP['counts'][2]:,} Unhealthy days, so the shares are {pp[0]:.3f}, {pp[1]:.3f} and {pp[2]:.3f}.</p>
+<ul>
+<li><b>Gini of the parent</b> = 1 - ({pp[0]:.3f}&sup2; + {pp[1]:.3f}&sup2; + {pp[2]:.3f}&sup2;) = <b>{SEP['gini']:.3f}</b>.</li>
+<li><b>Entropy of the parent</b> = -({pp[0]:.3f} log2 {pp[0]:.3f} + {pp[1]:.3f} log2 {pp[1]:.3f} + {pp[2]:.3f} log2 {pp[2]:.3f}) = <b>{SEP['entropy']:.3f}</b> bits.</li>
+<li>The question sends {SEL['n']:,} days to the left (Gini {SEL['gini']:.3f}, entropy {SEL['entropy']:.3f}) and {SER['n']:,} days to the right (Gini {SER['gini']:.3f}, entropy {SER['entropy']:.3f}). The right-hand group, October to December, holds {SER['counts'][2]} Unhealthy days out of {SER['n']:,}.</li>
+<li><b>Weighted Gini of the children</b> = ({SEL['n']:,} &times; {SEL['gini']:.3f} + {SER['n']:,} &times; {SER['gini']:.3f}) / {SEP['n']:,} = {SE['weighted_gini']:.3f}, so the <b>Gini gain</b> is {SEP['gini']:.3f} - {SE['weighted_gini']:.3f} = <b>{SE['gini_gain']:.3f}</b>.</li>
+<li><b>Weighted entropy of the children</b> = ({SEL['n']:,} &times; {SEL['entropy']:.3f} + {SER['n']:,} &times; {SER['entropy']:.3f}) / {SEP['n']:,} = {SE['weighted_entropy']:.3f}, so the <b>information gain</b> is {SEP['entropy']:.3f} - {SE['weighted_entropy']:.3f} = <b>{SE['information_gain']:.3f}</b> bits.</li>
+</ul>
+{fig("dt_00c_split_example.png", "The root split in numbers",
+     "The colored bars show the share of Good, Moderate and Unhealthy days before and after the split. The gains are small because no single question separates the groups well, but this was still the best question available at the root.")}
+<p>The two measures do not always agree: on this same data, the Gini criterion chooses the month as its first question, while the entropy criterion chooses solar radiation (see the two trees in the Results section).</p>
+<h3>Why there is an infinite number of possible trees</h3>
+<p>Many different trees can be built from the same data. A numeric input such as temperature can be cut at <b>any real number</b>, and every value between two neighboring observed temperatures separates the training days in exactly the same way yet gives a different tree for new days, so the choices are unlimited. Beyond thresholds, any input can be reused at any depth and in any order, the depth and the stopping rules are free parameters, and different criteria (Gini or entropy) or different random tie-breaking give different trees. A tree allowed to grow until every leaf is pure can even memorize the training data, which gives one more valid tree. Finding the single best tree is computationally intractable (the problem is known to be NP-complete), so real algorithms grow the tree greedily, choosing the best question at each step without looking ahead. This means that the result is a good tree, never provably the best one, and it also means that the depth must be controlled to avoid memorizing noise.</p>
+</section>
+
+<section>
+<h2>Data Prep</h2>
+<p>Decision trees use the <b>same labeled sample and the same training and testing sets</b> as the Naive Bayes tab, which makes the two methods directly comparable. The details of the labels, the choice of inputs and the disjoint split are repeated below.</p>
+{SPLIT_TEXT}
+<p>Unlike Naive Bayes, trees need no scaling or binning. A question such as "temperature at most 28.95" depends only on the order of the values, so negative temperatures and very different units cause no problem. The raw numeric columns were used as they are. Two input sets were tested: the seven weather columns, and the same seven plus latitude and longitude. The depth of the tuned trees was chosen by <b>5-fold cross-validation inside the training set</b> (the training days are divided into five parts, each part takes a turn as a pretend test set), so the real testing set was never used to make any choice.</p>
+{DATA_LINKS}
+<ul>
+<li><a href="{CLEANLINK}dt_train.csv">dt_train.csv</a> and <a href="{CLEANLINK}dt_test.csv">dt_test.csv</a>: the training and testing sets used by the trees (raw weather columns, latitude, longitude, label and <code>row_id</code>)</li>
+</ul>
+</section>
+
+<section>
+<h2>Code</h2>
+<p>The analysis is written in <b>Python</b> with <code>pandas</code>, <code>numpy</code>, <code>scikit-learn</code> (<code>DecisionTreeClassifier</code>, <code>plot_tree</code>, <code>cross_val_score</code>, <code>train_test_split</code>), <code>matplotlib</code> and <code>seaborn</code>.</p>
+<ul>
+<li><a href="{CODE06}"><code>06_naive_bayes_trees.py</code></a> on GitHub: builds the labels and the split, grows every tree, selects depths by cross-validation and draws every figure on this tab</li>
+<li><a href="{CLEANLINK}nb_dt_results.json">nb_dt_results.json</a>: every number quoted on this tab</li>
+</ul>
+</section>
+
+<section>
+<h2>Results</h2>
+<p>All accuracies are measured on the testing set ({SP['test_rows']:,} days), and always answering Moderate would be correct on <b>{pc(BASE)}</b> of them. Three trees were built to show the effect of the splitting criterion and the inputs: Tree 1 (Gini, depth 3, weather), Tree 2 (entropy, depth 3, weather) and Tree 3 (Gini, depth 4, weather plus location). Two further trees use the depth that cross-validation preferred.</p>
+{DT_TABLE}
+<h3>Tree 1: Gini, depth 3, weather</h3>
+{fig("dt_tree1_gini_depth3.png", "Tree 1: a Gini tree of depth 3",
+     "Each box shows its question, its gini impurity, the number of training days that reached it, the count of Good, Moderate and Unhealthy days (value), and its majority group. Orange boxes lean Good, green boxes lean Moderate and purple boxes lean Unhealthy, and darker shades mean purer nodes.")}
+<p>The first question is the month: of the {SEP['counts'][2]:,} Unhealthy days in the training set, {SEL['counts'][2]:,} fall in January to September and only {SER['counts'][2]} in October to December. For the warm months, the tree asks whether the maximum temperature exceeded 28.95 C and then whether the wind speed was at most 11.45 km/h. The only leaf that predicts Unhealthy is the hot, calm one (334 training days, of which 190 were Unhealthy, 131 Moderate and 13 Good). In the October to December branch, cold days lean Good: calm days with a maximum temperature of 4.25 C or less, and windy days with a minimum temperature of 10.65 C or less. On the testing set the tree reaches {pc(T1['accuracy'])} accuracy and finds {pc(T1['recall']['Unhealthy'], 0)} of Unhealthy days, but when it does predict Unhealthy it is right {pc(T1['precision']['Unhealthy'], 0)} of the time.</p>
+<h3>Tree 2: entropy, depth 3, weather</h3>
+{fig("dt_tree2_entropy_depth3.png", "Tree 2: an entropy tree of depth 3",
+     "The same inputs and depth as Tree 1 but with entropy as the splitting measure. The tree starts from a different question (solar radiation) and ends with only one leaf that does not predict Moderate.")}
+<p>With entropy the root question is solar radiation at most 19.29, not the month, so the same data and depth produce a different tree. The only leaf that predicts Good collects dim days from October to December with strong winds (1,937 training days, 1,190 of them Good). No leaf predicts Unhealthy, so the tree finds none of the Unhealthy days on the testing set. Its accuracy is {pc(T2['accuracy'])}, close to Tree 1 ({pc(T1['accuracy'])}), which shows that the two criteria can differ in structure while performing about the same.</p>
+<h3>Tree 3: Gini, depth 4, weather plus location</h3>
+{fig("dt_tree3_gini_depth4_location.png", "Tree 3: a Gini tree of depth 4 that may also use latitude and longitude",
+     "Latitude and longitude are available as inputs, and eight of its fifteen questions use them. A leaf with a gini of 0.0 contains days of a single group.")}
+<p>Allowed to use location, the tree asks about longitude and latitude in eight of its fifteen questions, which splits the country into regions before weather conditions are considered. One branch (calm days from October to December with longitude at most -136.29, which matches only the two far-western cities in the study, Honolulu and Anchorage) ends in a leaf of 85 days that were all Good. Accuracy rises to {pc(T3['accuracy'])}, but the tree still never predicts Unhealthy on the testing set.</p>
+<h3>Choosing the depth, and the tuned trees</h3>
+{fig("dt_04_depth_sweep.png", "Training accuracy keeps rising with depth but cross-validated accuracy does not",
+     f"The dashed lines show accuracy on the training days, which climb past 85% as the trees memorize them, and the solid lines show cross-validated accuracy, which peaks and then falls. The dots mark the depth chosen for each input set (weather: depth {NR['best_depth_cv']['gini|weather']} for Gini; weather plus location: depth {NR['best_depth_cv']['gini|weather+location']}).")}
+<p>Deeper trees fit the training days better and better, but the cross-validated accuracy peaks early and then declines, which is the signature of <b>overfitting</b>. The tuned weather-only tree (Gini, depth {TW['depth']}, {TW['leaves']} leaves) reaches {pc(TW['accuracy'])} accuracy and macro-F1 {TW['macro_f1']:.2f}, and finds {pc(TW['recall']['Unhealthy'], 0)} of the Unhealthy days with {pc(TW['precision']['Unhealthy'], 0)} precision. With location added, the tuned tree (depth {TL['depth']}, {TL['leaves']} leaves) reaches {pc(TL['accuracy'])} accuracy and macro-F1 {TL['macro_f1']:.2f} and finds {pc(TL['recall']['Unhealthy'], 0)} of the Unhealthy days.</p>
+{fig("dt_05_confusion_matrices.png", "Confusion matrices of three trees and the tuned weather tree",
+     f"The three small trees answer Moderate for {MOD_LO}% to {MOD_HI}% of all days, which is why their Unhealthy row has few or no correct answers. The tuned tree (far right) spreads its answers across all groups and finds {TW['confusion'][2][2]} of the {sum(TW['confusion'][2])} Unhealthy days.")}
+{fig("dt_06_importance.png", "Which inputs the tuned trees rely on",
+     f"Importance is the share of the tree's total impurity reduction that comes from questions about each input. In the weather-only tree, the month ({pc(IMPW['month'], 0)}) and the three temperature columns together ({pc(TEMP_SUM, 0)}) dominate, and precipitation is almost unused ({pc(IMPW['precip_mm'], 0)}).")}
+<h3>A harder test: learn on January to September, test on October to December</h3>
+<p>Because daily weather and air quality are strongly related from one day to the next, a random split can be optimistic. In a time-based test, the trees were grown on January to September ({THR['train']:,} days) and graded on October to December ({THR['test']:,} days), where always answering Moderate is correct on {pc(DTT['baseline_accuracy'])} of days. Tree 1 simply answers Moderate every time ({pc(DTT['accuracy'])} accuracy, the same as the baseline), and the tuned weather tree reaches {pc(DTTT['accuracy'])} accuracy and macro-F1 {DTTT['macro_f1']:.2f}, but finds only {pc(DTTT['recall']['Unhealthy'], 0)} of the few Unhealthy days. A tree trained on warm months has little to learn about the cool-season days it is asked to judge, so forecasting into a new season is much harder than the random split suggests.</p>
+</section>
+
+<section>
+<h2>Conclusions</h2>
+<p><b>The month and the temperature are the strongest signals in the weather.</b> They account for about {pc(IMPW['month'], 0)} and {pc(TEMP_SUM, 0)} of the tuned weather tree's decisions, followed by wind speed ({pc(IMPW['wind_max'], 0)}). Almost all Unhealthy days ({SEL['counts'][2]:,} of {SEP['counts'][2]:,} in the training set) fall between January and September, and the tree's one Unhealthy rule is a hot, calm day. Precipitation barely matters, consistent with the earlier finding that rainy and dry days had nearly the same fine-particle levels.</p>
+<p><b>Readable trees are not good forecasters here.</b> The three small trees predict Moderate for most days and find few or none of the Unhealthy days, and even the cross-validated tree reaches {pc(TW['accuracy'])} accuracy against a {pc(BASE)} baseline, a gain of about {(TW['accuracy'] - BASE) * 100:.0f} percentage points. Location matters as much as weather: adding latitude and longitude lifts accuracy to {pc(TL['accuracy'])} and macro-F1 to {TL['macro_f1']:.2f}, so where a day happens carries information that the weather alone does not.</p>
+<p><b>Comparison with Naive Bayes.</b> On the same testing set, Naive Bayes (binned) is less accurate ({pc(NBM['accuracy'])}) but finds {pc(NBM['recall']['Unhealthy'], 0)} of the Unhealthy days, whereas the tuned tree is more accurate ({pc(TW['accuracy'])}) but finds only {pc(TW['recall']['Unhealthy'], 0)}. Naive Bayes behaves like a cautious alarm that is often wrong, and the tree behaves like a conservative forecaster that rarely warns. Neither is good enough to be a stand-alone warning system, and the later methods in this project will test whether ensembles of trees can do better.</p>
+<p><b>Limits.</b> The AQI is a modeled value, one year of data was used, the testing set shares the weather patterns of the training set, and the greedy tree-building method gives a good tree but not the only possible one. Rare events such as wildfire smoke cannot be predicted from local weather at all.</p>
+</section>
+"""
+page("dectrees.html", "DecTrees", dectrees)
+
 # ============================================================================ MODEL TABS (placeholders)
 MODELS = [
-    ("naivebayes.html", "NaiveBayes", "Module 3",
-     "Naive Bayes classification to predict a labeled outcome such as the AQI category or the High/Low asthma level.",
-     "daily_city_air_weather_clean.csv"),
-    ("dectrees.html", "DecTrees", "Module 3",
-     "Decision trees to find which weather conditions best warn of unhealthy air, in a form that is easy to read.",
-     "daily_city_air_weather_clean.csv"),
     ("regression.html", "Regression", "a later part of the course",
      "Linear regression to estimate PM2.5 or COPD prevalence from weather and lifestyle variables.",
      "county_health_clean.csv"),
@@ -639,7 +878,7 @@ home = f"""
 <ul class="cover">
 <li>Data preparation and exploratory analysis: <b>complete</b></li>
 <li>Clustering and PCA: <b>complete</b></li>
-<li>Naive Bayes and decision trees: to come</li>
+<li>Naive Bayes and decision trees: <b>complete</b></li>
 <li>Regression, AdaBoost, GradientBoosting and XGBoost: to come</li>
 </ul>
 <h2>Where to start</h2>
