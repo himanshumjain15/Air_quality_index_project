@@ -1,0 +1,648 @@
+{
+  "n_rows": 20075,
+  "label_counts": {
+    "Good": 5967,
+    "Moderate": 12251,
+    "Unhealthy": 1857
+  },
+  "label_share": {
+    "Good": 0.2972,
+    "Moderate": 0.6103,
+    "Unhealthy": 0.0925
+  },
+  "aqi_category_counts": {
+    "Moderate": 12251,
+    "Good": 5967,
+    "Unhealthy for Sensitive": 1493,
+    "Unhealthy": 293,
+    "Very Unhealthy": 71
+  },
+  "split": {
+    "train_rows": 16060,
+    "test_rows": 4015,
+    "overlap_rows": 0,
+    "train_share": {
+      "Good": 0.2973,
+      "Moderate": 0.6103,
+      "Unhealthy": 0.0925
+    },
+    "test_share": {
+      "Good": 0.2971,
+      "Moderate": 0.6102,
+      "Unhealthy": 0.0927
+    },
+    "train_counts": {
+      "Good": 4774,
+      "Moderate": 9801,
+      "Unhealthy": 1485
+    },
+    "test_counts": {
+      "Good": 1193,
+      "Moderate": 2450,
+      "Unhealthy": 372
+    }
+  },
+  "majority_class": "Moderate",
+  "baseline_accuracy_test": 0.6102117061021171,
+  "nb_binned_columns": 33,
+  "nb": {
+    "Multinomial NB (scaled values)": {
+      "accuracy": 0.6102117061021171,
+      "macro_f1": 0.2526424336169116,
+      "recall": {
+        "Good": 0.0,
+        "Moderate": 1.0,
+        "Unhealthy": 0.0
+      },
+      "precision": {
+        "Good": 0.0,
+        "Moderate": 0.6102117061021171,
+        "Unhealthy": 0.0
+      },
+      "predicted_counts": {
+        "Good": 0,
+        "Moderate": 4015,
+        "Unhealthy": 0
+      },
+      "confusion": [
+        [
+          0,
+          1193,
+          0
+        ],
+        [
+          0,
+          2450,
+          0
+        ],
+        [
+          0,
+          372,
+          0
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171
+    },
+    "Multinomial NB (binned values)": {
+      "accuracy": 0.5006226650062267,
+      "macro_f1": 0.47976681279509564,
+      "recall": {
+        "Good": 0.548197820620285,
+        "Moderate": 0.44693877551020406,
+        "Unhealthy": 0.7016129032258065
+      },
+      "precision": {
+        "Good": 0.42689295039164493,
+        "Moderate": 0.6788592684438933,
+        "Unhealthy": 0.3
+      },
+      "predicted_counts": {
+        "Good": 1532,
+        "Moderate": 1613,
+        "Unhealthy": 870
+      },
+      "confusion": [
+        [
+          654,
+          419,
+          120
+        ],
+        [
+          866,
+          1095,
+          489
+        ],
+        [
+          12,
+          99,
+          261
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171
+    },
+    "Bernoulli NB (binned values)": {
+      "accuracy": 0.50186799501868,
+      "macro_f1": 0.4815752535151148,
+      "recall": {
+        "Good": 0.5632858340318525,
+        "Moderate": 0.4416326530612245,
+        "Unhealthy": 0.7016129032258065
+      },
+      "precision": {
+        "Good": 0.4277530235518778,
+        "Moderate": 0.6865482233502538,
+        "Unhealthy": 0.30069124423963134
+      },
+      "predicted_counts": {
+        "Good": 1571,
+        "Moderate": 1576,
+        "Unhealthy": 868
+      },
+      "confusion": [
+        [
+          672,
+          399,
+          122
+        ],
+        [
+          883,
+          1082,
+          485
+        ],
+        [
+          16,
+          95,
+          261
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171
+    },
+    "Gaussian NB (raw values)": {
+      "accuracy": 0.47198007471980075,
+      "macro_f1": 0.4510441421493509,
+      "recall": {
+        "Good": 0.4543168482816429,
+        "Moderate": 0.43020408163265306,
+        "Unhealthy": 0.803763440860215
+      },
+      "precision": {
+        "Good": 0.4374495560936239,
+        "Moderate": 0.6566978193146418,
+        "Unhealthy": 0.2553373185311699
+      },
+      "predicted_counts": {
+        "Good": 1239,
+        "Moderate": 1605,
+        "Unhealthy": 1171
+      },
+      "confusion": [
+        [
+          542,
+          484,
+          167
+        ],
+        [
+          691,
+          1054,
+          705
+        ],
+        [
+          6,
+          67,
+          299
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171
+    }
+  },
+  "nb_priors_train": {
+    "Good": 0.2972602739726028,
+    "Moderate": 0.61027397260274,
+    "Unhealthy": 0.09246575342465763
+  },
+  "nb_top_unhealthy_bins": {
+    "temp_min 19.4 to 33.6": 1.473,
+    "month 5.0 to 8.0": 1.692,
+    "temp_mean 24.1 to 40.7": 1.788,
+    "solar_rad 24.6 to 32.5": 1.794,
+    "temp_max 29.9 to 47.2": 1.966
+  },
+  "nb_top_good_bins": {
+    "month 10.0 to 12.0": -3.593,
+    "temp_max -16.9 to 11.9": -3.057,
+    "temp_mean -22.5 to 6.8": -2.985,
+    "temp_min -27.5 to 2.2": -2.849,
+    "solar_rad 0.2 to 9.6": -2.713
+  },
+  "example_row": {
+    "city": "Austin",
+    "date": "2023-02-22"
+  },
+  "nb_location": {
+    "accuracy": 0.5145703611457036,
+    "macro_f1": 0.49024891101027007,
+    "recall": {
+      "Good": 0.5465213746856664,
+      "Moderate": 0.47061224489795916,
+      "Unhealthy": 0.7016129032258065
+    },
+    "precision": {
+      "Good": 0.4429347826086957,
+      "Moderate": 0.6854934601664685,
+      "Unhealthy": 0.30313588850174217
+    },
+    "predicted_counts": {
+      "Good": 1472,
+      "Moderate": 1682,
+      "Unhealthy": 861
+    },
+    "confusion": [
+      [
+        652,
+        429,
+        112
+      ],
+      [
+        809,
+        1153,
+        488
+      ],
+      [
+        11,
+        100,
+        261
+      ]
+    ],
+    "baseline_accuracy": 0.6102117061021171
+  },
+  "nb_time_holdout": {
+    "accuracy": 0.5685770750988143,
+    "macro_f1": 0.398060732987411,
+    "recall": {
+      "Good": 0.532418001525553,
+      "Moderate": 0.6115018618121638,
+      "Unhealthy": 0.14285714285714285
+    },
+    "precision": {
+      "Good": 0.6147071774548657,
+      "Moderate": 0.5539730134932533,
+      "Unhealthy": 0.024793388429752067
+    },
+    "predicted_counts": {
+      "Good": 2271,
+      "Moderate": 2668,
+      "Unhealthy": 121
+    },
+    "confusion": [
+      [
+        1396,
+        1174,
+        52
+      ],
+      [
+        873,
+        1478,
+        66
+      ],
+      [
+        2,
+        16,
+        3
+      ]
+    ],
+    "baseline_accuracy": 0.47766798418972334
+  },
+  "time_holdout_rows": {
+    "train": 15015,
+    "test": 5060
+  },
+  "best_depth_cv": {
+    "gini|weather": 6,
+    "gini|weather+location": 8,
+    "entropy|weather": 7,
+    "entropy|weather+location": 8
+  },
+  "dt": {
+    "Tree 1: Gini, depth 3, weather": {
+      "accuracy": 0.6378580323785803,
+      "macro_f1": 0.4114283233143384,
+      "recall": {
+        "Good": 0.18943839061190276,
+        "Moderate": 0.9363265306122449,
+        "Unhealthy": 0.11021505376344086
+      },
+      "precision": {
+        "Good": 0.6608187134502924,
+        "Moderate": 0.6389972144846797,
+        "Unhealthy": 0.4939759036144578
+      },
+      "predicted_counts": {
+        "Good": 342,
+        "Moderate": 3590,
+        "Unhealthy": 83
+      },
+      "confusion": [
+        [
+          226,
+          965,
+          2
+        ],
+        [
+          116,
+          2294,
+          40
+        ],
+        [
+          0,
+          331,
+          41
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171,
+      "criterion": "gini",
+      "depth": 3,
+      "leaves": 8,
+      "train_accuracy": 0.6486301369863013
+    },
+    "Tree 2: Entropy, depth 3, weather": {
+      "accuracy": 0.6348692403486924,
+      "macro_f1": 0.36760061180314674,
+      "recall": {
+        "Good": 0.24476110645431684,
+        "Moderate": 0.9212244897959184,
+        "Unhealthy": 0.0
+      },
+      "precision": {
+        "Good": 0.6008230452674898,
+        "Moderate": 0.6395579484273165,
+        "Unhealthy": 0.0
+      },
+      "predicted_counts": {
+        "Good": 486,
+        "Moderate": 3529,
+        "Unhealthy": 0
+      },
+      "confusion": [
+        [
+          292,
+          901,
+          0
+        ],
+        [
+          193,
+          2257,
+          0
+        ],
+        [
+          1,
+          371,
+          0
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171,
+      "criterion": "entropy",
+      "depth": 3,
+      "leaves": 8,
+      "train_accuracy": 0.6381693648816936
+    },
+    "Tree 3: Gini, depth 4, weather + location": {
+      "accuracy": 0.6500622665006227,
+      "macro_f1": 0.39444265225908,
+      "recall": {
+        "Good": 0.3176865046102263,
+        "Moderate": 0.9106122448979592,
+        "Unhealthy": 0.0
+      },
+      "precision": {
+        "Good": 0.6295681063122923,
+        "Moderate": 0.6536771169059479,
+        "Unhealthy": 0.0
+      },
+      "predicted_counts": {
+        "Good": 602,
+        "Moderate": 3413,
+        "Unhealthy": 0
+      },
+      "confusion": [
+        [
+          379,
+          814,
+          0
+        ],
+        [
+          219,
+          2231,
+          0
+        ],
+        [
+          4,
+          368,
+          0
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171,
+      "criterion": "gini",
+      "depth": 4,
+      "leaves": 16,
+      "train_accuracy": 0.658717310087173
+    },
+    "Tuned: Gini, depth 6, weather": {
+      "accuracy": 0.6518057285180573,
+      "macro_f1": 0.5281673343155676,
+      "recall": {
+        "Good": 0.36797988264878456,
+        "Moderate": 0.8436734693877551,
+        "Unhealthy": 0.29838709677419356
+      },
+      "precision": {
+        "Good": 0.6038514442916093,
+        "Moderate": 0.6724137931034483,
+        "Unhealthy": 0.5186915887850467
+      },
+      "predicted_counts": {
+        "Good": 727,
+        "Moderate": 3074,
+        "Unhealthy": 214
+      },
+      "confusion": [
+        [
+          439,
+          748,
+          6
+        ],
+        [
+          286,
+          2067,
+          97
+        ],
+        [
+          2,
+          259,
+          111
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171,
+      "criterion": "gini",
+      "depth": 6,
+      "leaves": 61,
+      "train_accuracy": 0.6770236612702366,
+      "importance": {
+        "precip_mm": 0.0109,
+        "temp_mean": 0.042,
+        "solar_rad": 0.0431,
+        "temp_min": 0.1096,
+        "wind_max": 0.1326,
+        "temp_max": 0.2575,
+        "month": 0.4043
+      }
+    },
+    "Tuned: Gini, depth 8, weather + location": {
+      "accuracy": 0.7068493150684931,
+      "macro_f1": 0.616101347448436,
+      "recall": {
+        "Good": 0.4920368818105616,
+        "Moderate": 0.8591836734693877,
+        "Unhealthy": 0.3924731182795699
+      },
+      "precision": {
+        "Good": 0.6786127167630058,
+        "Moderate": 0.7176951926355267,
+        "Unhealthy": 0.6728110599078341
+      },
+      "predicted_counts": {
+        "Good": 865,
+        "Moderate": 2933,
+        "Unhealthy": 217
+      },
+      "confusion": [
+        [
+          587,
+          602,
+          4
+        ],
+        [
+          278,
+          2105,
+          67
+        ],
+        [
+          0,
+          226,
+          146
+        ]
+      ],
+      "baseline_accuracy": 0.6102117061021171,
+      "criterion": "gini",
+      "depth": 8,
+      "leaves": 204,
+      "train_accuracy": 0.7372353673723536,
+      "importance": {
+        "precip_mm": 0.0209,
+        "temp_mean": 0.0358,
+        "temp_min": 0.0393,
+        "solar_rad": 0.06,
+        "wind_max": 0.0783,
+        "latitude": 0.1285,
+        "temp_max": 0.1605,
+        "longitude": 0.2378,
+        "month": 0.2389
+      }
+    }
+  },
+  "split_example": {
+    "parent": {
+      "counts": [
+        4774,
+        9801,
+        1485
+      ],
+      "n": 16060,
+      "gini": 0.530652092325014,
+      "entropy": 1.2726819241380656
+    },
+    "left": {
+      "counts": [
+        2676,
+        7878,
+        1468
+      ],
+      "n": 12022,
+      "gini": 0.5061258374508377,
+      "entropy": 1.2525090398234473
+    },
+    "right": {
+      "counts": [
+        2098,
+        1923,
+        17
+      ],
+      "n": 4038,
+      "gini": 0.503244315211533,
+      "entropy": 1.0337151478270192
+    },
+    "weighted_gini": 0.5054013301779665,
+    "weighted_entropy": 1.197497225634059,
+    "gini_gain": 0.025250762147047467,
+    "information_gain": 0.07518469850400655,
+    "feature": "month",
+    "threshold": 9.5
+  },
+  "dt_time_holdout": {
+    "accuracy": 0.47766798418972334,
+    "macro_f1": 0.2155053274486202,
+    "recall": {
+      "Good": 0.0,
+      "Moderate": 1.0,
+      "Unhealthy": 0.0
+    },
+    "precision": {
+      "Good": 0.0,
+      "Moderate": 0.47766798418972334,
+      "Unhealthy": 0.0
+    },
+    "predicted_counts": {
+      "Good": 0,
+      "Moderate": 5060,
+      "Unhealthy": 0
+    },
+    "confusion": [
+      [
+        0,
+        2622,
+        0
+      ],
+      [
+        0,
+        2417,
+        0
+      ],
+      [
+        0,
+        21,
+        0
+      ]
+    ],
+    "baseline_accuracy": 0.47766798418972334
+  },
+  "dt_time_holdout_tuned": {
+    "accuracy": 0.5543478260869565,
+    "macro_f1": 0.38526480540246943,
+    "recall": {
+      "Good": 0.5186880244088482,
+      "Moderate": 0.5974348365742657,
+      "Unhealthy": 0.047619047619047616
+    },
+    "precision": {
+      "Good": 0.5867126833477135,
+      "Moderate": 0.5316642120765832,
+      "Unhealthy": 0.038461538461538464
+    },
+    "predicted_counts": {
+      "Good": 2318,
+      "Moderate": 2716,
+      "Unhealthy": 26
+    },
+    "confusion": [
+      [
+        1360,
+        1254,
+        8
+      ],
+      [
+        956,
+        1444,
+        17
+      ],
+      [
+        2,
+        18,
+        1
+      ]
+    ],
+    "baseline_accuracy": 0.47766798418972334
+  },
+  "dt_names": {
+    "tuned_weather": "Tuned: Gini, depth 6, weather",
+    "tuned_location": "Tuned: Gini, depth 8, weather + location"
+  }
+}
