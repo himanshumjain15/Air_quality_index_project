@@ -1,0 +1,756 @@
+{
+  "split": {
+    "train_rows": 16060,
+    "test_rows": 4015,
+    "overlap_rows": 0
+  },
+  "same_split_as_part3": true,
+  "corr_temps": {
+    "mean_max": 0.978491988642413,
+    "mean_min": 0.9740519091015697,
+    "max_min": 0.9151351194747999
+  },
+  "time_holdout_rows": {
+    "train": 15015,
+    "test": 5060
+  },
+  "reg_features": [
+    "temp_mean",
+    "temp_range",
+    "precip_mm",
+    "wind_max",
+    "solar_rad",
+    "season_Winter",
+    "season_Spring",
+    "season_Summer"
+  ],
+  "pm25": {
+    "train_mean": 10.686647986716478,
+    "train_std": 6.311705520773345,
+    "test_mean": 10.639099211290993
+  },
+  "linear": {
+    "Weather only (5 inputs)": {
+      "rmse": 5.85504447045618,
+      "mae": 4.15803135843385,
+      "r2": 0.07558531400449531,
+      "baseline_rmse": 6.089897989148782,
+      "baseline_mae": 4.338533328990962,
+      "cv_r2_train": 0.06259536584910774,
+      "train_r2": 0.09023391816682702
+    },
+    "Weather and season (8 inputs, main model)": {
+      "rmse": 5.7534163259338875,
+      "mae": 4.051215535621215,
+      "r2": 0.10739761449134333,
+      "baseline_rmse": 6.089897989148782,
+      "baseline_mae": 4.338533328990962,
+      "cv_r2_train": 0.1044341333032536,
+      "train_r2": 0.13440789721885105
+    },
+    "Weather, season and location (10 inputs)": {
+      "rmse": 5.673006226137284,
+      "mae": 4.002519999963857,
+      "r2": 0.13217339368729564,
+      "baseline_rmse": 6.089897989148782,
+      "baseline_mae": 4.338533328990962,
+      "cv_r2_train": 0.11638971722543456,
+      "train_r2": 0.16377455120368256
+    }
+  },
+  "linear_main": "Weather and season (8 inputs, main model)",
+  "linear_coefficients": {
+    "temp_mean": 0.04320054295850897,
+    "temp_range": 0.010530775283425262,
+    "precip_mm": 0.009865592209952295,
+    "wind_max": -0.22699669507069137,
+    "solar_rad": 0.0376045499468208,
+    "season_Winter": 2.537239107976859,
+    "season_Spring": 3.1551649937235884,
+    "season_Summer": 4.114274869629108
+  },
+  "linear_intercept": 11.137767090869584,
+  "linear_std_coefficients": {
+    "temp_mean": 0.40807222368389706,
+    "temp_range": 0.0427684968849148,
+    "precip_mm": 0.06688196827867729,
+    "wind_max": -1.584644409947663,
+    "solar_rad": 0.288366300436564,
+    "season_Winter": 2.537239107976859,
+    "season_Spring": 3.1551649937235884,
+    "season_Summer": 4.114274869629108
+  },
+  "feature_sd": {
+    "temp_mean": 9.445997567109776,
+    "temp_range": 4.061286632165588,
+    "precip_mm": 6.779316117607976,
+    "wind_max": 6.980914014867806,
+    "solar_rad": 7.668388555224375,
+    "season_Winter": 1.0,
+    "season_Spring": 1.0,
+    "season_Summer": 1.0
+  },
+  "linear_std_coef_ci": {
+    "temp_mean": [
+      0.28152432296610275,
+      0.5439513524115263
+    ],
+    "temp_range": [
+      -0.04984700183671663,
+      0.14016170194466843
+    ],
+    "precip_mm": [
+      -0.02551833661668889,
+      0.16273658594484172
+    ],
+    "wind_max": [
+      -1.668663119720971,
+      -1.4982769899027313
+    ],
+    "solar_rad": [
+      0.11758966340132156,
+      0.454708969476846
+    ],
+    "season_Winter": [
+      2.2847633982687006,
+      2.7930883363470174
+    ],
+    "season_Spring": [
+      2.887197738897455,
+      3.4197847965940635
+    ],
+    "season_Summer": [
+      3.804173207989007,
+      4.443371298801655
+    ]
+  },
+  "linear_time_holdout": {
+    "rmse": 4.459159705532968,
+    "mae": 3.46055493740277,
+    "r2": -0.0007332732750517934,
+    "baseline_rmse": 5.415379728776771,
+    "baseline_mae": 4.591104920003141
+  },
+  "unhealthy": {
+    "train_share": 0.09246575342465753,
+    "test_share": 0.09265255292652554,
+    "test_positives": 372,
+    "baseline_accuracy": 0.9073474470734745
+  },
+  "logistic_C": 1.0,
+  "logistic_C_cv_logloss": {
+    "0.001": 0.23858420288325027,
+    "0.01": 0.22579410678681144,
+    "0.1": 0.22451405783944006,
+    "1.0": 0.22449613205729038,
+    "10.0": 0.22449788014198102,
+    "100.0": 0.2244980957515316
+  },
+  "logistic": {
+    "Logistic, default cut-off 0.5": {
+      "accuracy": 0.9085927770859278,
+      "precision": 0.5308641975308642,
+      "recall": 0.11559139784946236,
+      "f1": 0.18984547461368653,
+      "auc": 0.8602098884589389,
+      "confusion": [
+        [
+          3605,
+          38
+        ],
+        [
+          329,
+          43
+        ]
+      ],
+      "predicted_positive": 81
+    },
+    "Logistic, balanced class weights": {
+      "accuracy": 0.762640099626401,
+      "precision": 0.25892116182572616,
+      "recall": 0.8387096774193549,
+      "f1": 0.39568801521876984,
+      "auc": 0.8610584741985662,
+      "confusion": [
+        [
+          2750,
+          893
+        ],
+        [
+          60,
+          312
+        ]
+      ],
+      "predicted_positive": 1205
+    },
+    "Logistic, cut-off tuned by cross-validation (0.225)": {
+      "accuracy": 0.8605230386052304,
+      "precision": 0.34539473684210525,
+      "recall": 0.5645161290322581,
+      "f1": 0.42857142857142855,
+      "auc": 0.8602098884589389,
+      "confusion": [
+        [
+          3245,
+          398
+        ],
+        [
+          162,
+          210
+        ]
+      ],
+      "predicted_positive": 608
+    }
+  },
+  "logistic_threshold": 0.22500000000000003,
+  "logistic_coef_raw": {
+    "temp_mean": 0.09977284544655947,
+    "temp_range": 0.03379411044655523,
+    "precip_mm": 0.01961497463786206,
+    "wind_max": -0.08342123944220609,
+    "solar_rad": 0.10496774087365973,
+    "season_Winter": 0.7523099060900944,
+    "season_Spring": 0.525560032094015,
+    "season_Summer": 1.1583002107823175
+  },
+  "logistic_step": {
+    "temp_mean": 9.445703477925031,
+    "temp_range": 4.061160189143961,
+    "precip_mm": 6.779105052176719,
+    "wind_max": 6.980696672941046,
+    "solar_rad": 7.66814980964748,
+    "season_Winter": 1.0,
+    "season_Spring": 1.0,
+    "season_Summer": 1.0
+  },
+  "logistic_odds_ratio_per_unit": {
+    "temp_mean": 1.1049199019800806,
+    "temp_range": 1.0343716184922165,
+    "precip_mm": 1.019808612246288,
+    "wind_max": 0.9199635406595531,
+    "solar_rad": 1.1106747803797232,
+    "season_Winter": 2.121895739997581,
+    "season_Spring": 1.6914058247316197,
+    "season_Summer": 3.184515667628979
+  },
+  "logistic_odds_ratio_per_sd": {
+    "temp_mean": 2.5661961706121104,
+    "temp_range": 1.147107201135565,
+    "precip_mm": 1.1422179856993573,
+    "wind_max": 0.5585906473514859,
+    "solar_rad": 2.2364915422634315,
+    "season_Winter": 2.121895739997581,
+    "season_Spring": 1.6914058247316197,
+    "season_Summer": 3.184515667628979
+  },
+  "logistic_intercept_std": -3.4468823653235963,
+  "logistic_or_per_sd_ci": {
+    "temp_mean": [
+      2.3131238607733717,
+      2.870658137568041
+    ],
+    "temp_range": [
+      1.066718493730264,
+      1.2389919391401563
+    ],
+    "precip_mm": [
+      1.0372295800329154,
+      1.2308585092641495
+    ],
+    "wind_max": [
+      0.5132891074087641,
+      0.602585786090031
+    ],
+    "solar_rad": [
+      1.9264714531654623,
+      2.5444398938133554
+    ],
+    "season_Winter": [
+      1.4524795214357602,
+      2.8762900686376582
+    ],
+    "season_Spring": [
+      1.3522428643202073,
+      2.208399587707336
+    ],
+    "season_Summer": [
+      2.6250785459884662,
+      4.0374870105063305
+    ]
+  },
+  "logistic_variants_auc": {
+    "Weather only (5 inputs)": 0.8524567664013176,
+    "Weather and season (8 inputs)": 0.8602098884589389,
+    "Weather, season and location (10 inputs)": 0.8606791932679847
+  },
+  "logistic_time_holdout": {
+    "test_positives": 21,
+    "test_rows": 5060,
+    "auc": 0.862860166888744,
+    "accuracy_default": 0.9958498023715415,
+    "baseline_accuracy": 0.9958498023715415
+  },
+  "nb_binary": {
+    "Naive Bayes, default cut-off 0.5": {
+      "accuracy": 0.8087173100871731,
+      "precision": 0.29069767441860467,
+      "recall": 0.739247311827957,
+      "f1": 0.417298937784522,
+      "auc": 0.8597774786820505,
+      "confusion": [
+        [
+          2972,
+          671
+        ],
+        [
+          97,
+          275
+        ]
+      ],
+      "predicted_positive": 946
+    },
+    "Naive Bayes, cut-off tuned by cross-validation (0.595)": {
+      "accuracy": 0.8201743462017435,
+      "precision": 0.2997711670480549,
+      "recall": 0.7043010752688172,
+      "f1": 0.420545746388443,
+      "auc": 0.8597774786820505,
+      "confusion": [
+        [
+          3031,
+          612
+        ],
+        [
+          110,
+          262
+        ]
+      ],
+      "predicted_positive": 874
+    }
+  },
+  "nb_threshold": 0.5950000000000001,
+  "nb_time_holdout_auc": 0.828310605845831,
+  "one_input_linear": {
+    "intercept": 7.990775595783783,
+    "slope": 0.1600325870395695,
+    "r2_train": 0.03780111179659007
+  },
+  "one_input_logistic": {
+    "b0": -6.344075404229066,
+    "b1": 0.1549467610811076,
+    "feature": "temp_max"
+  },
+  "ada_numeric": [
+    "temp_mean",
+    "temp_max",
+    "temp_min",
+    "precip_mm",
+    "wind_max",
+    "solar_rad",
+    "month"
+  ],
+  "ada_categorical": [
+    "season",
+    "region"
+  ],
+  "ada_columns": [
+    "temp_mean",
+    "temp_max",
+    "temp_min",
+    "precip_mm",
+    "wind_max",
+    "solar_rad",
+    "month",
+    "season_Fall",
+    "season_Spring",
+    "season_Summer",
+    "season_Winter",
+    "region_Midwest",
+    "region_Northeast",
+    "region_South",
+    "region_West"
+  ],
+  "ada_baseline_accuracy": 0.6102117061021171,
+  "ada_grid": [
+    {
+      "depth": 1,
+      "learning_rate": 0.05,
+      "best_rounds": 269,
+      "cv_accuracy": 0.6318181818181818,
+      "cv_macro_f1_at_best": 0.38797761523223484
+    },
+    {
+      "depth": 1,
+      "learning_rate": 0.1,
+      "best_rounds": 476,
+      "cv_accuracy": 0.6323163138231631,
+      "cv_macro_f1_at_best": 0.39147405627781534
+    },
+    {
+      "depth": 1,
+      "learning_rate": 0.3,
+      "best_rounds": 318,
+      "cv_accuracy": 0.6422166874221669,
+      "cv_macro_f1_at_best": 0.42924034368499686
+    },
+    {
+      "depth": 1,
+      "learning_rate": 1.0,
+      "best_rounds": 64,
+      "cv_accuracy": 0.6325653798256539,
+      "cv_macro_f1_at_best": 0.48309667427714437
+    },
+    {
+      "depth": 2,
+      "learning_rate": 0.05,
+      "best_rounds": 500,
+      "cv_accuracy": 0.6471980074719801,
+      "cv_macro_f1_at_best": 0.42993681973087233
+    },
+    {
+      "depth": 2,
+      "learning_rate": 0.1,
+      "best_rounds": 453,
+      "cv_accuracy": 0.651307596513076,
+      "cv_macro_f1_at_best": 0.4802120501020945
+    },
+    {
+      "depth": 2,
+      "learning_rate": 0.3,
+      "best_rounds": 418,
+      "cv_accuracy": 0.6504981320049813,
+      "cv_macro_f1_at_best": 0.5013742202074495
+    },
+    {
+      "depth": 2,
+      "learning_rate": 1.0,
+      "best_rounds": 490,
+      "cv_accuracy": 0.6511207970112081,
+      "cv_macro_f1_at_best": 0.5343011271088862
+    },
+    {
+      "depth": 3,
+      "learning_rate": 0.05,
+      "best_rounds": 470,
+      "cv_accuracy": 0.6607721046077211,
+      "cv_macro_f1_at_best": 0.5113350211383539
+    },
+    {
+      "depth": 3,
+      "learning_rate": 0.1,
+      "best_rounds": 460,
+      "cv_accuracy": 0.6623910336239104,
+      "cv_macro_f1_at_best": 0.5199698577096253
+    },
+    {
+      "depth": 3,
+      "learning_rate": 0.3,
+      "best_rounds": 263,
+      "cv_accuracy": 0.6635118306351183,
+      "cv_macro_f1_at_best": 0.532473211687188
+    },
+    {
+      "depth": 3,
+      "learning_rate": 1.0,
+      "best_rounds": 216,
+      "cv_accuracy": 0.6499377334993774,
+      "cv_macro_f1_at_best": 0.5413389144670744
+    }
+  ],
+  "ada_chosen": {
+    "base_depth": 3,
+    "learning_rate": 0.3,
+    "rounds": 263,
+    "cv_accuracy": 0.6635118306351183,
+    "cv_macro_f1": 0.532473211687188
+  },
+  "ada_best_stump": {
+    "base_depth": 1,
+    "learning_rate": 0.3,
+    "rounds": 318,
+    "cv_accuracy": 0.6422166874221669
+  },
+  "ada": {
+    "accuracy": 0.6552926525529266,
+    "macro_f1": 0.5343639288605875,
+    "recall": {
+      "Good": 0.3688181056160939,
+      "Moderate": 0.8473469387755102,
+      "Unhealthy": 0.30913978494623656
+    },
+    "precision": {
+      "Good": 0.6060606060606061,
+      "Moderate": 0.6749024707412223,
+      "Unhealthy": 0.539906103286385
+    },
+    "confusion": [
+      [
+        440,
+        746,
+        7
+      ],
+      [
+        283,
+        2076,
+        91
+      ],
+      [
+        3,
+        254,
+        115
+      ]
+    ],
+    "predicted_counts": {
+      "Good": 726,
+      "Moderate": 3076,
+      "Unhealthy": 213
+    },
+    "train_accuracy": 0.6689912826899128
+  },
+  "ada_stumps": {
+    "accuracy": 0.6308841843088419,
+    "macro_f1": 0.41940407326514845,
+    "recall": {
+      "Good": 0.2917015926236379,
+      "Moderate": 0.8808163265306123,
+      "Unhealthy": 0.07258064516129033
+    },
+    "precision": {
+      "Good": 0.5523809523809524,
+      "Moderate": 0.6445639187574671,
+      "Unhealthy": 0.7297297297297297
+    },
+    "confusion": [
+      [
+        348,
+        845,
+        0
+      ],
+      [
+        282,
+        2158,
+        10
+      ],
+      [
+        0,
+        345,
+        27
+      ]
+    ],
+    "predicted_counts": {
+      "Good": 630,
+      "Moderate": 3348,
+      "Unhealthy": 37
+    }
+  },
+  "dt_same_inputs": {
+    "accuracy": 0.65280199252802,
+    "macro_f1": 0.5284903034600109,
+    "recall": {
+      "Good": 0.4191114836546521,
+      "Moderate": 0.826530612244898,
+      "Unhealthy": 0.25806451612903225
+    },
+    "precision": {
+      "Good": 0.5847953216374269,
+      "Moderate": 0.6779377301640442,
+      "Unhealthy": 0.5549132947976878
+    },
+    "confusion": [
+      [
+        500,
+        690,
+        3
+      ],
+      [
+        351,
+        2025,
+        74
+      ],
+      [
+        4,
+        272,
+        96
+      ]
+    ],
+    "predicted_counts": {
+      "Good": 855,
+      "Moderate": 2987,
+      "Unhealthy": 173
+    },
+    "depth": 7,
+    "cv_accuracy": 0.663760896637609
+  },
+  "dt_part3_tuned_weather": {
+    "accuracy": 0.6518057285180573,
+    "macro_f1": 0.5281673343155676,
+    "recall_unhealthy": 0.29838709677419356,
+    "depth": 6
+  },
+  "ada_vs_dt": {
+    "ada_only_correct": 318,
+    "dt_only_correct": 308,
+    "mcnemar_p": 0.7190935213822287,
+    "difference_points": 0.24906600249066102,
+    "difference_ci95": [
+      -0.9719800747198065,
+      1.4694894146948911
+    ]
+  },
+  "ada_importance": {
+    "month": 0.34705641390483494,
+    "solar_rad": 0.19382307091728004,
+    "temp_max": 0.13375724796437763,
+    "wind_max": 0.06622512594717152,
+    "temp_min": 0.0634906473809264,
+    "season_Summer": 0.05291049460680204,
+    "temp_mean": 0.046157716230075786,
+    "region_Northeast": 0.03550639047082565,
+    "region_West": 0.021688449942264085,
+    "region_Midwest": 0.013916833651812446,
+    "region_South": 0.01346783814316864,
+    "precip_mm": 0.0072507020584116075,
+    "season_Spring": 0.0023625561371869094,
+    "season_Fall": 0.0015554654644841942,
+    "season_Winter": 0.0008310471803783119
+  },
+  "ada_time_holdout": {
+    "ada": {
+      "accuracy": 0.5432806324110672,
+      "macro_f1": 0.35166090325433635,
+      "recall": {
+        "Good": 0.7063310450038138,
+        "Moderate": 0.37112122465866776,
+        "Unhealthy": 0.0
+      },
+      "precision": {
+        "Good": 0.5490661132522977,
+        "Moderate": 0.5317131001778305,
+        "Unhealthy": 0.0
+      },
+      "confusion": [
+        [
+          1852,
+          770,
+          0
+        ],
+        [
+          1520,
+          897,
+          0
+        ],
+        [
+          1,
+          20,
+          0
+        ]
+      ],
+      "predicted_counts": {
+        "Good": 3373,
+        "Moderate": 1687,
+        "Unhealthy": 0
+      }
+    },
+    "dt": {
+      "accuracy": 0.5079051383399209,
+      "macro_f1": 0.3160267939273264,
+      "recall": {
+        "Good": 0.2414187643020595,
+        "Moderate": 0.8014067025237899,
+        "Unhealthy": 0.0
+      },
+      "precision": {
+        "Good": 0.5682226211849192,
+        "Moderate": 0.49137493658041603,
+        "Unhealthy": 0.0
+      },
+      "confusion": [
+        [
+          633,
+          1986,
+          3
+        ],
+        [
+          479,
+          1937,
+          1
+        ],
+        [
+          2,
+          19,
+          0
+        ]
+      ],
+      "predicted_counts": {
+        "Good": 1114,
+        "Moderate": 3942,
+        "Unhealthy": 4
+      }
+    },
+    "baseline_accuracy": 0.47766798418972334
+  },
+  "toy_seed": 22,
+  "toy": {
+    "n_points": 70,
+    "rounds": [
+      {
+        "round": 1,
+        "rule": "maximum temperature <= 27.4",
+        "feature": "maximum temperature",
+        "threshold": 27.449999809265137,
+        "unhealthy_side": "above",
+        "weighted_error": 0.11428571428571428,
+        "alpha": 1.0238464216826277,
+        "factor_wrong": 2.7838821814150108,
+        "factor_right": 0.3592106040535498,
+        "n_wrong": 8
+      },
+      {
+        "round": 2,
+        "rule": "solar radiation <= 22.3",
+        "feature": "solar radiation",
+        "threshold": 22.344999313354492,
+        "unhealthy_side": "above",
+        "weighted_error": 0.22177419354838712,
+        "alpha": 0.6276785018362072,
+        "factor_wrong": 1.8732567653930703,
+        "factor_right": 0.5338296481690098,
+        "n_wrong": 14
+      },
+      {
+        "round": 3,
+        "rule": "maximum temperature <= 20.6",
+        "feature": "maximum temperature",
+        "threshold": 20.550000190734863,
+        "unhealthy_side": "above",
+        "weighted_error": 0.29764484220442766,
+        "alpha": 0.4292691139087262,
+        "factor_wrong": 1.5361343739028395,
+        "factor_right": 0.6509847165644183,
+        "n_wrong": 11
+      }
+    ],
+    "final_accuracy": 0.9285714285714286,
+    "stump_accuracies": [
+      0.8857142857142857,
+      0.8,
+      0.8428571428571429
+    ],
+    "vote_example": {
+      "true_class": "Unhealthy",
+      "votes": [
+        -1.0238464216826277,
+        0.6276785018362072,
+        0.4292691139087262
+      ],
+      "total": 0.03310119406230566,
+      "stump_predictions": [
+        -1,
+        1,
+        1
+      ],
+      "solar_rad": 24.62,
+      "temp_max": 24.8
+    }
+  }
+}

@@ -184,6 +184,11 @@ intro = f"""
 
 {fig("eda_15_season_region.png", "Air quality follows the seasons",
      "Average fine-particle levels are lowest in fall in all four regions and highest in summer in three of them, while the West peaks in winter instead. The pattern differs by region, which is one reason a single rule for every city rarely works.")}
+
+<p>Air quality is a spectrum and not a switch, and the way it is described to the public shapes how people respond. Fine particle levels rise and fall continuously, and health risks rise with them gradually instead of jumping at a single line. Yet warnings must be simple, so agencies draw lines on the scale, such as an index value of 101, above which sensitive groups are advised to take care. Every line creates two kinds of mistakes. A line set too high misses days when vulnerable people should have been warned, and a line set too low produces so many alerts that people stop paying attention. Public health officials therefore weigh the cost of a missed warning against the cost of a false alarm, and the balance differs for a school nurse, a marathon organizer, and a hospital planning for extra asthma admissions. Another challenge is that conditions that go together are easy to confuse. Hot days tend to be sunny, sunny days tend to be calm, and calm days let pollution build up, so it takes care to say which of these truly matters and by how much. A statement such as every extra bit of breeze lowers the level a little is easier to act on than the vague claim that wind helps. Knowing both how much the air changes with conditions and how reliably a day can be sorted into safe or unsafe lets communities set realistic expectations for forecasts. These ideas also explain why the same forecast can be judged a success by a city planner and a failure by the parent of a child with asthma.</p>
+
+{fig("eda_02_pm25_distribution.png", "Most days are clean, but a long tail is not",
+     "Daily fine-particle levels vary continuously: most city-days fall below the World Health Organization guideline of 15 micrograms per cubic meter, but about 17% exceed it, and a few days reach several times that level. Any single line drawn through this spread will separate some days wrongly.")}
 </section>
 
 <section>
@@ -805,14 +810,326 @@ dectrees = f"""
 """
 page("dectrees.html", "DecTrees", dectrees)
 
+# ============================================================================ REGRESSION AND ADABOOST TABS (Module 4)
+RA = json.loads((ROOT / "data" / "clean" / "reg_ada_results.json").read_text(encoding="utf-8"))
+CODE07 = f"{GH}/blob/main/code/07_regression_adaboost.py"
+
+
+def pick(d, prefix):
+    return d[[k for k in d if k.startswith(prefix)][0]]
+
+
+LIN = RA["linear"]
+LMAIN = LIN[RA["linear_main"]]
+LWEA = LIN["Weather only (5 inputs)"]
+LLOC = LIN["Weather, season and location (10 inputs)"]
+LCO, LST, LCI, LSD = RA["linear_coefficients"], RA["linear_std_coefficients"], RA["linear_std_coef_ci"], RA["feature_sd"]
+WIND_CI = [LCI["wind_max"][0] / LSD["wind_max"], LCI["wind_max"][1] / LSD["wind_max"]]
+LTIME = RA["linear_time_holdout"]
+UNH = RA["unhealthy"]
+LG = RA["logistic"]
+LG05, LGBAL, LGTUN = pick(LG, "Logistic, default"), pick(LG, "Logistic, balanced"), pick(LG, "Logistic, cut-off")
+NBB = RA["nb_binary"]
+NB05, NBTUN = pick(NBB, "Naive Bayes, default"), pick(NBB, "Naive Bayes, cut-off")
+ORU, ORS, ORCI = RA["logistic_odds_ratio_per_unit"], RA["logistic_odds_ratio_per_sd"], RA["logistic_or_per_sd_ci"]
+LOGCOEF, LOGSTEP = RA["logistic_coef_raw"], RA["logistic_step"]
+THR_L, THR_N = RA["logistic_threshold"], RA["nb_threshold"]
+VAUC = RA["logistic_variants_auc"]
+LTIME_C = RA["logistic_time_holdout"]
+ODDS_START = 0.10
+ODDS_AFTER = ODDS_START / (1 - ODDS_START) * ORS["wind_max"]
+P_AFTER = ODDS_AFTER / (1 + ODDS_AFTER)
+
+
+def lin_row(name, r):
+    return f"<tr><td>{name}</td><td>{r['rmse']:.2f}</td><td>{r['mae']:.2f}</td><td>{r['r2']:.3f}</td><td>{r['cv_r2_train']:.3f}</td></tr>"
+
+
+LIN_TABLE = ("<table><tr><th>Inputs</th><th>RMSE (ug/m3)</th><th>MAE (ug/m3)</th><th>R-squared (testing set)</th><th>R-squared (5-fold, training set)</th></tr>"
+             f"<tr><td><i>Always predict the training average ({RA['pm25']['train_mean']:.1f})</i></td><td>{LMAIN['baseline_rmse']:.2f}</td><td>{LMAIN['baseline_mae']:.2f}</td><td>0.000</td><td>-</td></tr>"
+             + lin_row("Weather only (5 inputs)", LWEA) + lin_row("Weather and season (8 inputs), the main model", LMAIN)
+             + lin_row("Weather, season and location (10 inputs)", LLOC) + "</table>")
+
+
+def coef_rows():
+    names = {"temp_mean": ("Mean temperature", "per 1 C"), "temp_range": ("Daily temperature range", "per 1 C"),
+             "precip_mm": ("Precipitation", "per 1 mm"), "wind_max": ("Maximum wind speed", "per 1 km/h"),
+             "solar_rad": ("Solar radiation", "per 1 MJ/m2"), "season_Winter": ("Winter instead of Fall", "per switch"),
+             "season_Spring": ("Spring instead of Fall", "per switch"), "season_Summer": ("Summer instead of Fall", "per switch")}
+    out = []
+    for f, (nm, unit) in names.items():
+        lo, hi = LCI[f][0] / LSD[f], LCI[f][1] / LSD[f]
+        out.append(f"<tr><td>{nm}</td><td>{LCO[f]:+.3f} ug/m3 {unit}</td><td>{lo:+.3f} to {hi:+.3f}</td></tr>")
+    return "".join(out)
+
+
+LIN_COEF_TABLE = "<table><tr><th>Input</th><th>Coefficient</th><th>95% bootstrap interval</th></tr>" + coef_rows() + "</table>"
+
+
+def bin_row(name, r):
+    return (f"<tr><td>{name}</td><td>{pc(r['accuracy'])}</td><td>{pc(r['recall'], 1)}</td><td>{pc(r['precision'], 1)}</td>"
+            f"<td>{r['f1']:.3f}</td><td>{r['auc']:.3f}</td></tr>")
+
+
+CLS_TABLE = ("<table><tr><th>Method and cut-off</th><th>Accuracy</th><th>Recall (unhealthy days found)</th><th>Precision (alerts that were right)</th><th>F1</th><th>AUC</th></tr>"
+             f"<tr><td><i>Always answer 'not unhealthy' (baseline)</i></td><td>{pc(UNH['baseline_accuracy'])}</td><td>0.0%</td><td>-</td><td>0.000</td><td>0.500</td></tr>"
+             + bin_row("Logistic regression, cut-off 0.5", LG05) + bin_row("Logistic regression, balanced class weights", LGBAL)
+             + bin_row(f"Logistic regression, cut-off {THR_L:.3f} (chosen by cross-validation)", LGTUN)
+             + bin_row("Naive Bayes (Part 3 method), cut-off 0.5", NB05)
+             + bin_row(f"Naive Bayes, cut-off {THR_N:.3f} (chosen by cross-validation)", NBTUN) + "</table>")
+
+REG_DATA_LINKS = f"""<ul>
+<li><a href="{CLEANLINK}reg_dataset.csv">reg_dataset.csv</a>: the full sample ({NR['n_rows']:,} city-days, inputs and both targets)</li>
+<li><a href="{CLEANLINK}reg_train.csv">reg_train.csv</a> and <a href="{CLEANLINK}reg_test.csv">reg_test.csv</a>: the training and testing sets</li>
+<li><a href="{CLEANLINK}daily_city_air_weather_clean.csv">daily_city_air_weather_clean.csv</a>: the cleaned daily table the sample comes from</li>
+<li>Raw data: <a href="{RAWLINK}openmeteo_weather_daily_raw.csv">daily weather</a>, <a href="{RAWLINK}openmeteo_air_quality_hourly_raw.csv">hourly air quality</a> and <a href="{RAWLINK}cities_reference.csv">city locations</a></li>
+</ul>"""
+
+regression = f"""
+<h1>Regression</h1>
+<p class="sub">How much does the weather change PM2.5, and which days turn unhealthy?</p>
+<p>This tab applies two regression methods to the same city-days, and the same training and testing split, as the Part 3 tabs. <b>Linear regression</b> predicts a number (the daily PM2.5 level) and <b>logistic regression</b> predicts a yes/no answer (is the day Unhealthy?). The logistic model is compared with the Naive Bayes model from Part 3. The write-up is organized into Overview, Data Prep, Code, Results and Conclusions.</p>
+
+<section>
+<h2>Overview</h2>
+<h3>Linear regression: predicting a number</h3>
+<p><b>Linear regression</b> predicts a numeric target as a weighted sum of the inputs: prediction = b0 + b1 &times; x1 + b2 &times; x2 + ... With one input this is a straight line, and with several inputs it is a flat surface. The numbers b1, b2, ... are the <b>coefficients</b>, and each says how much the prediction changes when its input increases by one unit while the others stay fixed. The coefficients are found by <b>least squares</b>: of all possible lines, the method keeps the one that makes the sum of squared <b>residuals</b> (actual value minus predicted value) as small as possible. Three numbers summarize how well it works on data it has not seen: the <b>RMSE</b> (typical size of the error in the units of the target, with large misses weighing heavily), the <b>MAE</b> (the average size of the error), and <b>R-squared</b> (the share of the variation in the target that the model explains, where 0 means no better than always predicting the average and 1 means perfect).</p>
+{fig("reg_00a_linear_idea.png", "Linear regression with a single input",
+     f"Each dot is a day, the red line is the fitted line, and each orange segment is a residual (the gap between the actual and the predicted PM2.5). With solar radiation alone the line rises only slightly (R-squared {RA['one_input_linear']['r2_train']:.2f} on the training days), which previews how much of the day-to-day change one weather variable can explain.", True)}
+<h3>Logistic regression: predicting a class through a probability</h3>
+<p>When the target is a category, such as Unhealthy or not, a straight line is a poor choice because it can predict values below 0 or above 1, which are not probabilities. <b>Logistic regression</b> keeps the linear idea but adds a step. It first computes the same kind of weighted sum, called the <b>linear score</b> z = b0 + b1 &times; x1 + b2 &times; x2 + ..., which can be any number from very negative to very positive. It then passes z through the <b>sigmoid</b> function, p = 1 / (1 + e<sup>-z</sup>), which squeezes every score into the range 0 to 1: a score of 0 gives p = 0.5, a large positive score gives p close to 1, and a large negative score gives p close to 0. The result p is read as the probability of the Unhealthy class. To turn the probability into a <b>class</b>, a <b>cut-off</b> is applied, usually 0.5: if p is at least the cut-off the day is called Unhealthy, otherwise not.</p>
+{fig("reg_00b_sigmoid.png", "From a linear score to a probability",
+     "The left panel shows the straight-line score of a one-input model that uses the maximum daily temperature, and the right panel shows the sigmoid that turns it into a probability. The blue dots are the observed share of unhealthy days in each temperature band, and they follow the red curve closely.")}
+{fig("reg_00c_logistic_pipeline.png", "The logistic regression pipeline", "Weather inputs become a linear score, the sigmoid turns the score into a probability, and a cut-off rule turns the probability into a class.")}
+<p>The coefficients of a logistic regression act on the <b>odds</b>, which are p / (1 - p), the ratio of the chance that the day is Unhealthy to the chance that it is not. Increasing an input by one unit multiplies the odds by e<sup>b</sup>, where b is its coefficient, so a coefficient of 0 means no effect, a positive coefficient raises the odds, and a negative coefficient lowers them.</p>
+<h3>How the two methods differ</h3>
+<table>
+<tr><th></th><th>Linear regression</th><th>Logistic regression</th></tr>
+<tr><td>Predicts</td><td>A number of any size (here, PM2.5)</td><td>The probability of a class, then the class (here, Unhealthy or not)</td></tr>
+<tr><td>Output range</td><td>Unbounded</td><td>Always between 0 and 1</td></tr>
+<tr><td>Fitted by</td><td>Minimizing squared errors (least squares)</td><td>Maximizing the likelihood of the observed classes</td></tr>
+<tr><td>A coefficient means</td><td>An <i>additive</i> change in the prediction per unit</td><td>A <i>multiplicative</i> change in the odds per unit</td></tr>
+<tr><td>Judged with</td><td>RMSE, MAE, R-squared, predicted versus actual plot</td><td>Confusion matrix, accuracy, recall, precision, AUC</td></tr>
+</table>
+<h3>What is done with them here</h3>
+<p>Linear regression is asked how well the weather and the season predict the daily PM2.5 level, and what a change in wind or season is worth in micrograms per cubic meter. Logistic regression is asked whether a day will be Unhealthy (an AQI of 101 or more) and how the odds of that change with the conditions. Its results are then compared with the Naive Bayes model of Part 3 on the identical two-class question.</p>
+</section>
+
+<section>
+<h2>Data Prep</h2>
+<p>Supervised modeling needs <b>labeled data</b>, which means that every row carries the correct answer. All {NR['n_rows']:,} city-days have one, because both targets are computed from the cleaned air quality measurements. The rows were split into a <b>training set</b> ({RA['split']['train_rows']:,} rows), used to fit the models, and a <b>testing set</b> ({RA['split']['test_rows']:,} rows), used only once to grade them. The split is <b>the same as in Part 3</b>, which makes the results comparable. The two sets are <b>disjoint</b>: each row has an identifier, and the code verified that the sets share <b>{RA['split']['overlap_rows']} rows</b>. They must be disjoint because a model graded on rows it has already seen is graded on memory, and the accuracy would look better than it really is. The split was stratified in Part 3, so the share of Unhealthy days is {pc(UNH['train_share'])} in the training set and {pc(UNH['test_share'])} in the testing set.</p>
+<h3>Which columns were used</h3>
+<ul>
+<li><b>Linear regression needs a numeric target:</b> <code>pm2_5</code>, the daily mean PM2.5 in micrograms per cubic meter (average {RA['pm25']['train_mean']:.1f}, standard deviation {RA['pm25']['train_std']:.1f} in the training set).</li>
+<li><b>Logistic regression needs a two-class label:</b> <code>unhealthy</code>, equal to 1 when the daily maximum AQI is 101 or more and 0 otherwise. This is {pc(UNH['train_share'])} of training days, so the classes are very unbalanced.</li>
+<li><b>Inputs for both:</b> mean temperature, the daily temperature range (maximum minus minimum), precipitation, maximum wind speed, solar radiation, and the season as three 0/1 columns for Winter, Spring and Summer (Fall is the reference, because it is the cleanest season).</li>
+<li><b>Not used:</b> any pollutant or AQI column, because the targets are computed from them. The three temperature columns were replaced by the mean and the range because the mean, maximum and minimum are nearly copies of each other (correlations of {RA['corr_temps']['mean_max']:.2f}, {RA['corr_temps']['mean_min']:.2f} and {RA['corr_temps']['max_min']:.2f}), and such overlapping inputs make coefficients unstable and hard to interpret.</li>
+<li><b>Scaling:</b> for logistic regression the inputs were standardized (average 0, standard deviation 1, learned from the training set only), which helps the fitting procedure; the coefficients were converted back to original units for interpretation.</li>
+</ul>
+{fig("reg_01_data_sample.png", "A sample of the regression data",
+     "Each row is a city and a day, with the weather inputs followed by the two targets (orange): the numeric pm2_5 for linear regression and the 0/1 label unhealthy for logistic regression.")}
+<div class="figrow">
+{fig("reg_02_train_sample.png", "Training set", f"The first rows of the {RA['split']['train_rows']:,}-day training set, used to fit the models.", True)}
+{fig("reg_03_test_sample.png", "Testing set", f"The first rows of the {RA['split']['test_rows']:,}-day testing set, used only to grade the models.", True)}
+</div>
+{REG_DATA_LINKS}
+</section>
+
+<section>
+<h2>Code</h2>
+<p>The analysis is written in <b>Python</b> with <code>pandas</code>, <code>numpy</code>, <code>scikit-learn</code> (<code>LinearRegression</code>, <code>LogisticRegression</code>, <code>StandardScaler</code>, <code>GridSearchCV</code>, <code>cross_val_predict</code>), <code>scipy</code>, <code>matplotlib</code> and <code>seaborn</code>. The logistic regression uses the default L2 regularization, and its strength (C = {RA['logistic_C']:g}) was chosen by 5-fold cross-validation on the training set only, as was the tuned cut-off. The testing set was used once, for the final models.</p>
+<ul>
+<li><a href="{CODE07}"><code>07_regression_adaboost.py</code></a> on GitHub: builds the targets, fits both regressions, compares them with Naive Bayes, and draws every figure on this tab (the same script also produces the AdaBoost tab)</li>
+<li><a href="{CLEANLINK}reg_ada_results.json">reg_ada_results.json</a>: every number quoted on this tab</li>
+</ul>
+</section>
+
+<section>
+<h2>Results</h2>
+<h3>Linear regression: predicting the PM2.5 level</h3>
+{LIN_TABLE}
+<p>On the testing set, the main model (weather and season) has an <b>RMSE of {LMAIN['rmse']:.2f}</b> and an <b>MAE of {LMAIN['mae']:.2f}</b> micrograms per cubic meter, compared with {LMAIN['baseline_rmse']:.2f} and {LMAIN['baseline_mae']:.2f} for simply guessing the average, and an <b>R-squared of {LMAIN['r2']:.3f}</b>. The weather and the season therefore explain only about {LMAIN['r2'] * 100:.0f}% of the day-to-day variation in PM2.5, and the typical error shrinks by only about {(1 - LMAIN['mae'] / LMAIN['baseline_mae']) * 100:.0f}%. The cross-validated R-squared on the training set ({LMAIN['cv_r2_train']:.3f}) is almost identical, so the result is stable and not a matter of luck in the split. Adding the season helps (R-squared {LWEA['r2']:.3f} for weather alone), and adding each city's location helps a little more ({LLOC['r2']:.3f}).</p>
+{fig("reg_04_predicted_vs_actual.png", "Predicted versus actual PM2.5 on the testing set",
+     "Each cell counts test days; a perfect model would put every day on the red dashed line. The predictions span only a narrow range (about 1 to 16), while the actual values are spread from 1 to over 40, and the orange line, which averages the actual values within bands of the prediction, rises with the prediction but stays flatter than the red line.")}
+<h3>Two coefficients in plain words</h3>
+{LIN_COEF_TABLE}
+<ul>
+<li><b>Wind speed ({LCO['wind_max']:+.3f} per km/h).</b> On windier days there is less fine particulate matter. For every extra kilometer per hour of maximum wind speed, the predicted PM2.5 is about {abs(LCO['wind_max']):.2f} micrograms per cubic meter lower, with the temperature, sun, rain and season held fixed (the 95% interval is {WIND_CI[0]:.2f} to {WIND_CI[1]:.2f}). A day that is {LSD['wind_max']:.0f} km/h windier than usual is predicted to be about {abs(LST['wind_max']):.1f} units cleaner. This matches the idea that wind mixes pollution upward and carries it away.</li>
+<li><b>Summer ({LCO['season_Summer']:+.2f}).</b> A summer day has, on average, about {LCO['season_Summer']:.1f} micrograms per cubic meter more PM2.5 than a fall day with the same temperature, wind, sun and rain (95% interval {LCI['season_Summer'][0]:.1f} to {LCI['season_Summer'][1]:.1f}). Spring ({LCO['season_Spring']:+.1f}) and winter ({LCO['season_Winter']:+.1f}) are also higher than fall, which is consistently the cleanest season.</li>
+</ul>
+{fig("reg_05_coefficients.png", "What the linear regression learned",
+     "Each bar is the change in the predicted PM2.5 when an input rises by one standard deviation, or when a season replaces fall, and the black whiskers are 95% bootstrap intervals. The season and the wind speed matter most, while precipitation and the temperature range are not distinguishable from zero.")}
+<p>These coefficients describe associations in this data, and they are not proof that wind or summer <i>causes</i> a change. Because sunny, hot and calm weather occur together, the effect of one condition is shared with others, which is why the small temperature and solar radiation coefficients should not be read alone.</p>
+<h3>Learning from January to September, testing on October to December</h3>
+<p>In a harder, time-based test, the same linear model was fitted on {RA['time_holdout_rows']['train']:,} days from January to September and graded on {RA['time_holdout_rows']['test']:,} days from October to December. The RMSE was {LTIME['rmse']:.2f}, better than the {LTIME['baseline_rmse']:.2f} obtained by carrying over the January to September average, because the model knows that autumn is cleaner. Its R-squared of {LTIME['r2']:.3f}, however, shows that within autumn it explains nothing beyond the autumn average, so forecasting day-to-day changes into a new season is much harder than the random split suggests.</p>
+
+<h3>Logistic regression: will the day be Unhealthy?</h3>
+{CLS_TABLE}
+{fig("reg_07_confusion_matrices.png", "Confusion matrices: logistic regression and Naive Bayes on the same two-class question",
+     "Rows are the true answer and columns are the prediction, so the diagonal holds the correct answers. At the default cut-off the logistic regression says 'not unhealthy' almost every time, while a lower, cross-validated cut-off (second panel) finds many more unhealthy days at the cost of more false alarms.")}
+<p><b>Accuracy at the default cut-off is misleading.</b> With a cut-off of 0.5, logistic regression is correct on <b>{pc(LG05['accuracy'])}</b> of testing days, but always answering 'not unhealthy' would be correct on {pc(UNH['baseline_accuracy'])}, so the model barely improves on guessing. Its confusion matrix shows why: it finds only {LG05['confusion'][1][1]} of the {UNH['test_positives']} unhealthy days ({pc(LG05['recall'], 0)}). Unhealthy days are rare ({pc(UNH['test_share'])}), so the predicted probability seldom rises above 0.5, even on risky days. This is a problem of the cut-off, not of the ranking: the <b>AUC of {LG05['auc']:.3f}</b> says that if one unhealthy day and one other day are picked at random, the unhealthy day receives the higher probability about {LG05['auc'] * 100:.0f}% of the time. A cut-off of {THR_L:.3f}, chosen by cross-validation on the training set to maximize the F1 score, finds {pc(LGTUN['recall'], 1)} of the unhealthy days ({LGTUN['confusion'][1][1]} of {UNH['test_positives']}), with an accuracy of {pc(LGTUN['accuracy'])} and a precision of {pc(LGTUN['precision'], 1)}, so about two of every three alerts are false.</p>
+<h3>What a coefficient means for the odds</h3>
+<p>The coefficient of the wind speed is {LOGCOEF['wind_max']:.3f} per km/h, and e raised to that power is <b>{ORU['wind_max']:.3f}</b>. In words: for each extra kilometer per hour of maximum wind speed, the <b>odds</b> of an unhealthy day are multiplied by {ORU['wind_max']:.2f}, which is {abs(1 - ORU['wind_max']) * 100:.0f}% lower, with the other inputs held fixed. For a wind speed {LOGSTEP['wind_max']:.0f} km/h higher (one standard deviation) the odds are multiplied by {ORS['wind_max']:.2f} (95% interval {ORCI['wind_max'][0]:.2f} to {ORCI['wind_max'][1]:.2f}). As an example, a day with a {ODDS_START * 100:.0f}% chance of being unhealthy has odds of {ODDS_START / (1 - ODDS_START):.3f}; after the wind increases by {LOGSTEP['wind_max']:.0f} km/h the odds become {ODDS_AFTER:.3f}, which is a chance of about {P_AFTER * 100:.1f}%. In the same way, a summer day has {ORU['season_Summer']:.1f} times the odds of an unhealthy day compared with a fall day with the same weather (95% interval {ORCI['season_Summer'][0]:.1f} to {ORCI['season_Summer'][1]:.1f}).</p>
+{fig("reg_09_odds_ratios.png", "What the logistic regression learned",
+     "Bars to the right of 1 raise the odds of an unhealthy day and bars to the left lower them, each for an increase of one standard deviation or for a season instead of fall. Summer, heat and sunshine raise the odds the most, and wind lowers them.")}
+<h3>Comparison with Naive Bayes (Part 3)</h3>
+<p>For a fair comparison, Naive Bayes was re-run on the same two-class label and the same split (the Part 3 results were for three groups, so those numbers are not directly comparable). The two methods <b>rank days equally well</b>: both have an AUC of {LG05['auc']:.3f} and their ROC curves lie on top of each other. They differ mainly in where their default cut-off falls. At 0.5, Naive Bayes is far more willing to raise an alert (it finds {pc(NB05['recall'], 0)} of unhealthy days with {pc(NB05['precision'], 0)} precision and {pc(NB05['accuracy'])} accuracy) than logistic regression ({pc(LG05['recall'], 0)} found, {pc(LG05['precision'], 0)} precision, {pc(LG05['accuracy'])} accuracy). When each method's cut-off is tuned the same way, they are practically tied: F1 of {LGTUN['f1']:.3f} for logistic regression and {NBTUN['f1']:.3f} for Naive Bayes.</p>
+{fig("reg_08_roc.png", "ROC curves of logistic regression and Naive Bayes",
+     "Each curve shows the share of unhealthy days found against the share of other days wrongly flagged as the cut-off moves, and a curve closer to the upper left corner is better. The two curves are almost identical, and both are far above the dashed line for guessing.", True)}
+<p>The real differences are practical. Logistic regression uses the weather numbers directly, with no binning, and gives odds ratios that can be explained (as above), whereas Naive Bayes needs the numbers turned into counts and treats related inputs such as the three temperatures as separate evidence. Adding the season, and then the city location, changes the AUC of the logistic regression only slightly ({VAUC['Weather only (5 inputs)']:.3f} for weather alone, {VAUC['Weather and season (8 inputs)']:.3f} with the season and {VAUC['Weather, season and location (10 inputs)']:.3f} with the location), so for the yes/no question the weather and the season already carry nearly all the available information.</p>
+<p>In the time-based test (October to December), only {LTIME_C['test_positives']} of {LTIME_C['test_rows']:,} days were unhealthy, so the AUC there ({LTIME_C['auc']:.3f} for logistic regression, {RA['nb_time_holdout_auc']:.3f} for Naive Bayes) rests on very few cases and should be treated as indicative only.</p>
+</section>
+
+<section>
+<h2>Conclusions</h2>
+<p><b>Season and wind are the clearest signals, but the weather explains the level of PM2.5 only weakly.</b> Weather and season together explain about {LMAIN['r2'] * 100:.0f}% of the day-to-day variation in PM2.5, and the typical error ({LMAIN['mae']:.1f} micrograms per cubic meter) is only {(1 - LMAIN['mae'] / LMAIN['baseline_mae']) * 100:.0f}% smaller than the error of guessing the average. The clearest signals are the season (summer about {LCO['season_Summer']:.0f} units higher than fall) and the wind (about {abs(LCO['wind_max']):.1f} units lower for each extra kilometer per hour). A forecast of the actual level cannot rest on the weather alone.</p>
+<p><b>Sorting days into unhealthy or not works better than predicting the level.</b> The ranking is good (AUC {LG05['auc']:.2f}): hot, sunny summer days with light winds carry several times the odds of an unhealthy day. Turning that ranking into an alert is where the cost appears. At the cut-off tuned for balance, about {pc(LGTUN['recall'], 0)} of unhealthy days are caught and roughly two of every three alerts are false, and a cut-off that catches more days produces even more false alarms. The cut-off is therefore a choice about how to weigh a missed warning against a false alarm, as the Introduction discussed.</p>
+<p><b>Logistic regression and Naive Bayes are equally good, so the choice is about explanation.</b> Both rank days equally well, and logistic regression is easier to explain, since each coefficient is an odds ratio.</p>
+<p><b>Limits.</b> The coefficients show association and not cause, the temperature, sun and calm weather overlap, the air quality values are modeled estimates, one year of data was used, and days close in time resemble each other. Distant events such as the June 2023 wildfire smoke cannot be seen in local weather at all.</p>
+</section>
+"""
+page("regression.html", "Regression", regression)
+
+# ---------------------------------------------------------------- ADABOOST PAGE
+AG = RA["ada_grid"]
+AC, AST = RA["ada_chosen"], RA["ada_best_stump"]
+AD, ASTP, ADT = RA["ada"], RA["ada_stumps"], RA["dt_same_inputs"]
+P3 = RA["dt_part3_tuned_weather"]
+ADV = RA["ada_vs_dt"]
+AIMP = RA["ada_importance"]
+REG_IMP = sum(v for k, v in AIMP.items() if k.startswith("region_"))
+ATH = RA["ada_time_holdout"]
+TOY = RA["toy"]
+ABASE = RA["ada_baseline_accuracy"]
+GRID_TABLE = ("<table><tr><th>Base tree</th>" + "".join(f"<th>Learning rate {lr}</th>" for lr in [0.05, 0.1, 0.3, 1.0]) + "</tr>"
+              + "".join("<tr><td>" + ("depth 1 (stumps)" if d == 1 else f"depth {d}") + "</td>" + "".join(
+                  "<td>" + "".join(f"{g['cv_accuracy'] * 100:.1f}% at {g['best_rounds']} rounds" for g in AG if g["depth"] == d and g["learning_rate"] == lr) + "</td>"
+                  for lr in [0.05, 0.1, 0.3, 1.0]) + "</tr>" for d in [1, 2, 3]) + "</table>")
+TOY_TABLE = ("<table><tr><th>Round</th><th>Stump (a single question)</th><th>Weighted error</th><th>Weight alpha</th><th>Weight of a wrong day</th><th>Weight of a right day</th></tr>"
+             + "".join(f"<tr><td>{r['round']}</td><td>{r['rule']}? If higher, Unhealthy; otherwise Good</td><td>{r['weighted_error']:.3f}</td><td>{r['alpha']:.2f}</td>"
+                       f"<td>&times; {r['factor_wrong']:.2f}</td><td>&times; {r['factor_right']:.2f}</td></tr>" for r in TOY["rounds"]) + "</table>")
+
+
+def mc_row(name, r, extra=""):
+    return (f"<tr><td>{name}</td><td>{pc(r['accuracy'])}</td><td>{r['macro_f1']:.3f}</td><td>{pc(r['recall']['Good'], 0)}</td>"
+            f"<td>{pc(r['recall']['Moderate'], 0)}</td><td>{pc(r['recall']['Unhealthy'], 0)}</td><td>{pc(r['precision']['Unhealthy'], 0)}</td></tr>")
+
+
+P3ROW = (f"<tr><td>Decision tree from Part 3 (weather inputs, depth {P3['depth']})</td><td>{pc(P3['accuracy'])}</td><td>{P3['macro_f1']:.3f}</td>"
+         f"<td>-</td><td>-</td><td>{pc(P3['recall_unhealthy'], 0)}</td><td>-</td></tr>")
+COMP_TABLE = ("<table><tr><th>Method</th><th>Accuracy</th><th>Macro-F1</th><th>Recall: Good</th><th>Recall: Moderate</th><th>Recall: Unhealthy</th><th>Precision: Unhealthy</th></tr>"
+              f"<tr><td><i>Always answer Moderate (baseline)</i></td><td>{pc(ABASE)}</td><td>0.253</td><td>0%</td><td>100%</td><td>0%</td><td>-</td></tr>"
+              + P3ROW + mc_row(f"Decision tree, same 15 inputs (depth {ADT['depth']})", ADT)
+              + mc_row(f"AdaBoost with stumps ({AST['rounds']} rounds)", ASTP)
+              + mc_row(f"AdaBoost, chosen by cross-validation (depth {AC['base_depth']}, {AC['rounds']} rounds)", AD) + "</table>")
+VOTE = TOY["vote_example"]
+_sign = 1 if VOTE["true_class"] == "Unhealthy" else -1
+VOTE_RIGHT = sum(abs(v) for v in VOTE["votes"] if v * _sign > 0)
+VOTE_WRONG = sum(abs(v) for v in VOTE["votes"] if v * _sign < 0)
+VOTE_OK = VOTE["total"] * _sign > 0
+STUMP_ACC = TOY["stump_accuracies"]
+
+ADA_DATA_LINKS = f"""<ul>
+<li><a href="{CLEANLINK}ada_dataset.csv">ada_dataset.csv</a>: the full labeled sample with the text columns (season, region) before encoding</li>
+<li><a href="{CLEANLINK}ada_train_onehot.csv">ada_train_onehot.csv</a> and <a href="{CLEANLINK}ada_test_onehot.csv">ada_test_onehot.csv</a>: the encoded training and testing sets used by AdaBoost</li>
+<li><a href="{CLEANLINK}daily_city_air_weather_clean.csv">daily_city_air_weather_clean.csv</a>: the cleaned daily table the sample comes from</li>
+<li>Raw data: <a href="{RAWLINK}openmeteo_weather_daily_raw.csv">daily weather</a>, <a href="{RAWLINK}openmeteo_air_quality_hourly_raw.csv">hourly air quality</a> and <a href="{RAWLINK}cities_reference.csv">city locations</a></li>
+</ul>"""
+
+adaboost = f"""
+<h1>AdaBoost</h1>
+<p class="sub">Can many weak decision trees, each fixing the last one's mistakes, beat a single tree?</p>
+<p>This tab applies AdaBoost to the same labeled city-days, the same AQI groups (Good, Moderate, Unhealthy) and the same training and testing split as the Decision Trees tab of Part 3, and compares it with the decision tree. It is organized into Overview, Data Prep, Code, Results and Conclusions.</p>
+
+<section>
+<h2>Overview</h2>
+<h3>Bagging and boosting</h3>
+<p>One decision tree is easy to read but unstable: a small change in the data can change the tree a lot. <b>Ensemble</b> methods combine many trees to get a steadier answer, and the two main strategies differ in how the trees are built. In <b>bagging</b>, many trees are grown independently, each on a random resample of the training days, and they vote with equal weight, which mainly reduces the instability. In <b>boosting</b>, the trees are grown <b>one after another</b>, and every new tree concentrates on the days that the earlier trees got wrong. The final answer is a <b>weighted vote</b>, in which trees that earned more trust have a larger say. Boosting mainly reduces the systematic error of very simple trees.</p>
+{fig("ada_00a_bagging_vs_boosting.png", "Bagging versus boosting",
+     "In bagging (left) the trees never see each other's mistakes, and each gets one equal vote. In boosting (right) each tree is built after the last, and the days it got wrong are given more weight so the next tree must pay attention to them.")}
+<h3>Decision stumps and the AdaBoost recipe</h3>
+<p>The classic building block of AdaBoost is the <b>decision stump</b>: a tree with a single question and two leaves, for example "is the solar radiation at most 23?". A stump is a <b>weak learner</b>, only a little better than guessing. <b>AdaBoost</b> (adaptive boosting) turns many weak learners into a strong one with the following steps, written for two classes:</p>
+<ol>
+<li><b>Start with equal weights.</b> Each of the n training days gets the weight 1/n.</li>
+<li><b>Fit a stump</b> that makes the smallest <i>weighted</i> error &epsilon; (the total weight of the days it classifies wrongly).</li>
+<li><b>Give the stump its weight alpha</b>: alpha = &frac12; ln((1 - &epsilon;) / &epsilon;). A stump with a small error gets a large positive alpha, a stump that is as good as a coin flip (&epsilon; = 0.5) gets alpha = 0 and no say, and a stump worse than a coin flip gets a negative alpha. Alpha is therefore the <b>trust</b> given to that stump in the final vote.</li>
+<li><b>Reweight the days.</b> The weight of every day that the stump got wrong is multiplied by e<sup>alpha</sup> (it becomes larger), the weight of every day it got right is multiplied by e<sup>-alpha</sup> (it becomes smaller), and all weights are rescaled to add up to 1. The next stump is therefore forced to concentrate on the hard days.</li>
+<li><b>Repeat</b> for the chosen number of rounds.</li>
+<li><b>Take a weighted vote.</b> Each stump votes +1 or -1 and is multiplied by its alpha. The class with the larger total vote wins.</li>
+</ol>
+<p>With more than two classes, scikit-learn uses the SAMME version, in which alpha = ln((1 - &epsilon;) / &epsilon;) + ln(K - 1) for K classes, and the vote is taken over all classes. Two settings control the process: the <b>number of rounds</b> (n_estimators) and the <b>learning rate</b>, which shrinks every alpha, so that a small learning rate needs more rounds but learns more carefully.</p>
+<h3>A worked example with real days</h3>
+<p>The example below uses {TOY['n_points']} real days (35 Good and 35 Unhealthy) described by two inputs, the solar radiation and the maximum temperature. In every round the weights of the days change, and the circled days are the ones that round's stump classified wrongly.</p>
+{TOY_TABLE}
+{fig("ada_00b_reweighting.png", "Three rounds of AdaBoost on 70 real days",
+     f"Bigger dots carry more weight, and the shaded areas show what each stump predicts. In round 1, {TOY['rounds'][0]['n_wrong']} days are wrong, so their weights are multiplied by {TOY['rounds'][0]['factor_wrong']:.1f} and the right days' weights by {TOY['rounds'][0]['factor_right']:.2f}, which is why the wrongly classified days are larger in round 2. The final panel combines the three stumps with their alphas.")}
+<p>The first stump is the most accurate on the original weights, so it receives the largest alpha ({TOY['rounds'][0]['alpha']:.2f}), and the stumps of the later rounds earn less trust because they work on the harder, reweighted days. Each stump alone is right on {STUMP_ACC[0] * 100:.0f}%, {STUMP_ACC[1] * 100:.0f}% and {STUMP_ACC[2] * 100:.0f}% of the 70 days, while their weighted vote is right on <b>{TOY['final_accuracy'] * 100:.0f}%</b>. The figure below shows how the vote is computed for one day that is really {VOTE['true_class']}: the stumps that vote for the right class carry a combined weight of {VOTE_RIGHT:.2f}, the stumps that vote for the wrong class carry {VOTE_WRONG:.2f}, and the total vote of {VOTE['total']:+.2f} gives the {'correct' if VOTE_OK else 'wrong'} answer.</p>
+{fig("ada_00c_weighted_vote.png", "The weighted vote for one day", "Each bar is one stump's vote, which is its alpha with the sign of its prediction, and the last bar is their sum. The sign of the total decides the class: red for Unhealthy and green for Good.", True)}
+<h3>What is done with it here</h3>
+<p>AdaBoost is applied to the three-group AQI label, with small decision trees as the weak learners, and its number of rounds, its learning rate and the depth of its base trees are tuned by cross-validation. The result is compared with the single decision tree of Part 3 to see whether combining many weak trees gives a measurable gain.</p>
+</section>
+
+<section>
+<h2>Data Prep</h2>
+<p>AdaBoost is supervised, so every row needs a known label. The label is the <b>AQI group</b> of the day (Good, Moderate, or Unhealthy, meaning an AQI of 101 or more), as in Part 3, and all {NR['n_rows']:,} city-days have one. The rows were split into a <b>training set</b> ({RA['split']['train_rows']:,} rows) to fit the models and a <b>testing set</b> ({RA['split']['test_rows']:,} rows) to grade them once, exactly as in Part 3. The two sets are <b>disjoint</b>, and the code confirmed that they share <b>{RA['split']['overlap_rows']} rows</b>; this matters because a model graded on days it has already seen would be graded on memory and would look better than it is. The split was stratified, so the label proportions are the same in both sets ({pc(NR['label_share']['Good'], 0)} Good, {pc(NR['label_share']['Moderate'], 0)} Moderate and {pc(NR['label_share']['Unhealthy'], 0)} Unhealthy).</p>
+{fig("ada_01_data_sample.png", "A sample of the AdaBoost data",
+     "Each row is a day with its numeric weather, two text columns (season and region, orange) and the label (orange). Scikit-learn cannot use the text columns as they are, so they must be turned into numbers.")}
+<h3>Turning text columns into numbers: one-hot encoding</h3>
+<p>The scikit-learn version of AdaBoost needs numeric inputs. Seven columns are already numbers (mean, maximum and minimum temperature, precipitation, maximum wind speed, solar radiation and the month), but <b>season</b> and <b>region</b> are text. Replacing the words by 1, 2, 3 and 4 would invent an order and distances that do not exist, so each category was turned into its own 0/1 column instead, a method called <b>one-hot encoding</b>: a winter day gets a 1 in <code>season_Winter</code> and 0 in the other three season columns, and a day in the West gets a 1 in <code>region_West</code>. Season has four values and region has four (the US Census regions), so the two text columns became eight number columns and the inputs total {len(RA['ada_columns'])}. Trees need no scaling, so the numeric columns were kept in their original units. The region adds a coarse idea of where the city is, which the weather alone does not give.</p>
+{fig("ada_02_onehot_step.png", "The one-hot step on six real days",
+     "Each row of the left table (season and region as words) becomes the row on the right, where exactly one season column and exactly one region column hold a 1 (highlighted). Only the training set was used to decide which columns exist, and the testing set was encoded with the same columns.")}
+<div class="figrow">
+{fig("ada_03_train_sample.png", "Training set", f"The first rows of the {RA['split']['train_rows']:,}-day training set after encoding, used to fit the models.", True)}
+{fig("ada_04_test_sample.png", "Testing set", f"The first rows of the {RA['split']['test_rows']:,}-day testing set after encoding, used only to grade the final models.", True)}
+</div>
+{ADA_DATA_LINKS}
+</section>
+
+<section>
+<h2>Code</h2>
+<p>The analysis is written in <b>Python</b> with <code>pandas</code>, <code>numpy</code>, <code>scikit-learn</code> (<code>AdaBoostClassifier</code> with <code>DecisionTreeClassifier</code> as the weak learner, <code>StratifiedKFold</code>, <code>staged_predict</code>), <code>joblib</code>, <code>scipy</code>, <code>matplotlib</code> and <code>seaborn</code>. The worked example above was computed with a hand-written AdaBoost loop (in the same script) so that the weights and alphas could be shown.</p>
+<ul>
+<li><a href="{CODE07}"><code>07_regression_adaboost.py</code></a> on GitHub: encodes the data, tunes AdaBoost by cross-validation, fits the final models, compares them with the decision tree and draws every figure on this tab</li>
+<li><a href="{CLEANLINK}reg_ada_results.json">reg_ada_results.json</a>: every number quoted on this tab</li>
+</ul>
+</section>
+
+<section>
+<h2>Results</h2>
+<h3>Tuning without touching the testing set</h3>
+<p>All settings were chosen with <b>5-fold cross-validation inside the training set</b>: the training days were divided into five parts, each part took a turn as the validation set, and the validation accuracy was recorded after <i>every</i> boosting round. The testing set was not used for any choice. It was used once, for the final comparison. The search covered the depth of the base trees (1, 2 or 3), the learning rate (0.05, 0.1, 0.3 or 1.0) and up to 500 rounds.</p>
+{GRID_TABLE}
+{fig("ada_05_validation_curves.png", "How validation accuracy changes as boosting rounds are added",
+     f"The left panel compares base trees of depth 1, 2 and 3, and the right panel compares learning rates for depth 3; each dot is the best round. Accuracy rises quickly during the first 30 rounds, then flattens, and the depth-3 trees clearly beat stumps, while a learning rate of 1.0 is noisy and worse.")}
+<p>The best setting was <b>base trees of depth {AC['base_depth']}, a learning rate of {AC['learning_rate']}, and {AC['rounds']} rounds</b>, with a cross-validated accuracy of {pc(AC['cv_accuracy'], 2)} (the dotted line in the figure, {pc(ABASE)}, is the accuracy of always answering Moderate). Plain stumps reach only {pc(AST['cv_accuracy'], 2)} even with the best learning rate ({AST['learning_rate']}, {AST['rounds']} rounds), most likely because a single question cannot express a combination such as "hot and calm". Past about 150 rounds the curves are flat, so the extra rounds add almost nothing.</p>
+{fig("ada_06_grid.png", "The grid of settings searched", "Each cell shows the best cross-validated accuracy and the round at which it was reached. Deeper base trees help much more than any change in the learning rate.", True)}
+<h3>Final results on the testing set</h3>
+<p>The chosen model was fitted once on the whole training set and graded on the testing set: <b>accuracy {pc(AD['accuracy'])}</b>, macro-F1 {AD['macro_f1']:.3f}, and it finds {pc(AD['recall']['Unhealthy'], 1)} of the Unhealthy days ({AD['confusion'][2][2]} of {sum(AD['confusion'][2])}), with a precision of {pc(AD['precision']['Unhealthy'], 0)} when it predicts Unhealthy.</p>
+{fig("ada_07_confusion_matrices.png", "Confusion matrices on the testing set",
+     "The diagonal holds the correct answers. The tuned AdaBoost (left) and the decision tree on the same inputs (center) have similar patterns, while AdaBoost with stumps (right) answers Moderate for almost every day.")}
+<h3>AdaBoost versus the decision tree from Part 3</h3>
+{COMP_TABLE}
+{fig("ada_08_comparison.png", "AdaBoost compared with the decision trees",
+     "From left to right in each panel: the Part 3 tuned tree, a decision tree refitted on this tab's 15 inputs, and the tuned AdaBoost. All three are within a fraction of a point on accuracy and macro-F1, and all are about four and a half points above always answering Moderate.")}
+<p><b>Which did best, and by how much?</b> AdaBoost has the highest numbers, but by a margin that is too small to trust. Its accuracy of {pc(AD['accuracy'], 2)} is <b>{ADV['difference_points']:.2f} percentage points</b> above the decision tree on the same inputs ({pc(ADT['accuracy'], 2)}) and {(AD['accuracy'] - P3['accuracy']) * 100:.2f} points above the tuned tree of Part 3 ({pc(P3['accuracy'], 2)}). On the testing set, AdaBoost was right where the tree was wrong on {ADV['ada_only_correct']} days, and the tree was right where AdaBoost was wrong on {ADV['dt_only_correct']} days, which is a difference of only {ADV['ada_only_correct'] - ADV['dt_only_correct']} days out of {RA['split']['test_rows']:,}. A paired significance test (McNemar's exact test) gives p = {ADV['mcnemar_p']:.2f}, and the 95% bootstrap interval of the difference runs from {ADV['difference_ci95'][0]:+.1f} to {ADV['difference_ci95'][1]:+.1f} points, so the two methods are statistically <b>tied</b>. The macro-F1 ({AD['macro_f1']:.3f} against {ADT['macro_f1']:.3f}) and the share of Unhealthy days found ({pc(AD['recall']['Unhealthy'], 0)} against {pc(ADT['recall']['Unhealthy'], 0)}) tell the same story. Both are about {(AD['accuracy'] - ABASE) * 100:.1f} points above the {pc(ABASE)} of always answering Moderate.</p>
+{fig("ada_09_importance.png", "Which inputs the boosted trees rely on",
+     f"The month and the solar radiation carry about {(AIMP['month'] + AIMP['solar_rad']) * 100:.0f}% of the importance, followed by the maximum temperature and the wind. The four region columns together hold about {REG_IMP * 100:.0f}%, so location added little.", True)}
+<h3>A harder test: learn on January to September, test on October to December</h3>
+<p>When the models were fitted on {RA['time_holdout_rows']['train']:,} days from January to September and graded on {RA['time_holdout_rows']['test']:,} days from October to December, always answering the training period's most common group was right on {pc(ATH['baseline_accuracy'])} of days. AdaBoost reached {pc(ATH['ada']['accuracy'])} (macro-F1 {ATH['ada']['macro_f1']:.2f}) and the decision tree {pc(ATH['dt']['accuracy'])} (macro-F1 {ATH['dt']['macro_f1']:.2f}). AdaBoost is again ahead, but it finds {pc(ATH['ada']['recall']['Unhealthy'], 0)} of the few Unhealthy days of that period and the tree finds {pc(ATH['dt']['recall']['Unhealthy'], 0)}, because few such days occur in autumn and the models learned mostly from the warm months. Forecasting into a new season remains much harder than the random split suggests.</p>
+</section>
+
+<section>
+<h2>Conclusions</h2>
+<p><b>Boosting helped only slightly.</b> Combining {AC['rounds']} small trees raised accuracy to {pc(AD['accuracy'])}, about {(AD['accuracy'] - ABASE) * 100:.1f} points above guessing the most common group, but a single well-tuned decision tree reaches nearly the same level ({pc(ADT['accuracy'])}). Boosting reduces the errors that come from using very simple trees, yet it cannot create information that the inputs do not contain. The weather, the month and the region leave a large part of the variation in air quality unexplained, such as local traffic, industry and distant smoke.</p>
+<p><b>Depth mattered more than the number of rounds.</b> Plain stumps stayed at {pc(AST['cv_accuracy'], 1)} in cross-validation, while trees of depth 3 reached {pc(AC['cv_accuracy'], 1)}, and extra rounds beyond about 150 changed little. The combinations of conditions that signal unhealthy air, such as heat together with strong sunshine and calm winds, are probably better captured by trees that can ask a few questions in a row.</p>
+<p><b>The practical choice is the simpler tree.</b> Because AdaBoost and a decision tree are statistically tied, the tree is the better tool when the goal is to explain a warning to the public: it can be drawn and read, while a weighted vote of {AC['rounds']} trees cannot. AdaBoost is worth its extra complexity only if a small gain would matter.</p>
+<p><b>Detection remains limited.</b> AdaBoost finds about {pc(AD['recall']['Unhealthy'], 0)} of the Unhealthy days, and it is right about {pc(AD['precision']['Unhealthy'], 0)} of the time when it says a day will be unhealthy. As in the earlier parts, the days that matter most for health are the ones the weather alone predicts least well.</p>
+</section>
+"""
+page("adaboost.html", "AdaBoost", adaboost)
+
 # ============================================================================ MODEL TABS (placeholders)
 MODELS = [
-    ("regression.html", "Regression", "a later part of the course",
-     "Linear regression to estimate PM2.5 or COPD prevalence from weather and lifestyle variables.",
-     "county_health_clean.csv"),
-    ("adaboost.html", "AdaBoost", "a later part of the course",
-     "AdaBoost, an ensemble that combines many simple decision trees and gives extra weight to the cases that earlier trees got wrong, to predict the AQI category or asthma level.",
-     "daily_city_air_weather_clean.csv"),
     ("gradientboosting.html", "GradientBoosting", "a later part of the course",
      "Gradient boosting, which builds trees one after another so that each corrects the errors of the previous ones, to predict PM2.5 or the AQI category.",
      "daily_city_air_weather_clean.csv"),
@@ -863,7 +1180,7 @@ about = """
 """
 
 home = f"""
-<h1>How Weather Shapes the Air We Breathe, and What It Means for Lung Health</h1>
+<h1>How Weather Shapes the Air People Breathe, and What It Means for Lung Health</h1>
 <p class="sub">Air quality, weather and respiratory health across 55 US cities, 2023</p>
 <p class="lead">On June 7, 2023, smoke from Canadian wildfires pushed New York City's daily fine-particle level to more than four times the World Health Organization guideline, while Denver and Phoenix barely changed. That contrast frames this project: how much of the air people breathe is set by weather, season and distant events, and how does that air relate to asthma and COPD? The project draws on three data sources covering hourly air quality and daily weather for 55 cities in 2023 and county-level health statistics for 2,956 US counties.</p>
 <div class="stats">
@@ -879,7 +1196,8 @@ home = f"""
 <li>Data preparation and exploratory analysis: <b>complete</b></li>
 <li>Clustering and PCA: <b>complete</b></li>
 <li>Naive Bayes and decision trees: <b>complete</b></li>
-<li>Regression, AdaBoost, GradientBoosting and XGBoost: to come</li>
+<li>Regression and AdaBoost: <b>complete</b></li>
+<li>GradientBoosting and XGBoost: to come</li>
 </ul>
 <h2>Where to start</h2>
 <div class="start">
